@@ -1,8 +1,6 @@
 from fastapi import FastAPI
-from app.scrapper import routers as scrapper
-from app.submitter import routers as submitter
+from app.bot import routers as bot
 
 
 app = FastAPI()
-app.include_router(scrapper.router)
-app.include_router(submitter.router)
+app.include_router(bot.router)
