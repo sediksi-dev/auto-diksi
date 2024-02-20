@@ -69,8 +69,7 @@ class BotWriter(PreProcess):
                 "source": source,
                 "target": target,
                 "language": language,
-                "content": content,
-                "new_article": new_article,
+                "results": new_article,
             }
         except Exception as e:
             raise e

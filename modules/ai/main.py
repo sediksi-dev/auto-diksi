@@ -10,7 +10,7 @@ from .tasks.create_intro.models import CreateIntroArgs
 from .tasks.create_section_paragraphs.bot import create_section_paragraphs
 from .tasks.create_section_paragraphs.models import CreateSectionParagraphArgs
 
-from .models import ArticleToArticleInput
+from .models import ArticleToArticleInput, ArticleToArticleOutput
 
 
 class AI:
@@ -147,11 +147,10 @@ class AI:
             paragraph = self.create_section_paragraphs(section_args)
             paragraphs.append(paragraph)
 
-        results = {
-            "outline": outline,
-            "outline_str": outline_str,
-            "seo_data": seo_data,
-            "intro": intro,
-            "body_text": paragraphs,
-        }
+        results = ArticleToArticleOutput(
+            outline=outline,
+            seo_data=seo_data,
+            intro=intro,
+            body=paragraphs
+        )
         return results

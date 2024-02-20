@@ -36,7 +36,6 @@ class ArticleData(BaseModel):
 
     @field_serializer("map", when_used="always")
     def serialize_map(v: List[ArticleMap]):
-        print(v)
         taxonomies = []
         source = "https://" + "/".join(
             [
