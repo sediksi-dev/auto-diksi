@@ -14,8 +14,12 @@ def read_root():
     return config
 
 
-@router.post("/crawl", response_model=List[CrawlerResponse])
-def scrapper():
+@router.post(
+    "/crawl",
+    response_model=List[CrawlerResponse],
+    summary="Crawl the source and save the posts to the database as draft",
+)
+def bot_crawler():
     """
     This endpoint will check the posts from the source and save them to the database.
     It will return the list of articles that have been saved to the database.

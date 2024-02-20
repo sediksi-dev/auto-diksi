@@ -1,9 +1,16 @@
-from modules.supabase.db import db
-from .models import ArticleData
-from typing import List
 import requests
 import random
+
+from typing import List
+
+from .models.articles import ArticleData
+
+from modules.supabase.db import db
 from modules.preprocessor.config import PreProcess
+from modules.ai.main import AI
+from modules.ai.models import ArticleToArticleInput
+
+ai = AI()
 
 
 class BotWriter(PreProcess):
@@ -42,17 +49,28 @@ class BotWriter(PreProcess):
         source = article_data["map"]["source"] + "/" + str(post_id)
         target = article_data["map"]["target"]
         language = article_data["map"]["language"]
+        lang_target = language["to"]
+        lang_source = language["from"]
 
         try:
             response = requests.get(source)
             data = response.json()
             content = data["content"]["rendered"]
             content = self.__content_cleaner(content)
+            new_article = ai.article_to_article(
+                ArticleToArticleInput(
+                    original_article=content,
+                    lang_target=lang_target,
+                    lang_source=lang_source,
+                )
+            )
+
             return {
                 "source": source,
                 "target": target,
                 "language": language,
                 "content": content,
+                "new_article": new_article,
             }
         except Exception as e:
             raise e
