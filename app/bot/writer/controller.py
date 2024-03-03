@@ -8,7 +8,12 @@ from .models.articles import (
     ArticleMap,
     ArticleRewrited,
     ArticleDataFromSource,
+    FeaturedMediaData,
+    ImagesData,
+    IframeData,
+    ArticleWriteOutput
 )
+
 
 from modules.supabase.db import db
 from modules.preprocessor.config import PreProcess
@@ -22,11 +27,8 @@ class BotRewriter(PreProcess):
     def __init__(self):
         super().__init__()
         self.__draft: List[ArticleData] = []
-        self.__rewrited: List[ArticleRewrited] = []
         self.__source_data: List[ArticleDataFromSource] = []
-        self.__images = []
-        self.__video_links = []
-
+        self.__rewrited: List[ArticleRewrited] = []
         self.__get_drafted_posts()
 
     def __get_drafted_posts(self) -> None:
@@ -51,6 +53,17 @@ class BotRewriter(PreProcess):
 
     def __serialize_map(self, v: List[ArticleMap]):
         taxonomies = []
+        raw = {
+            "source": {
+                "host": v[0].item.source.endpoint.host,
+                "path": v[0].item.source.endpoint.path,
+            },
+            "target": {
+                "host": v[0].item.target.endpoint.host,
+                "path": v[0].item.target.endpoint.path,
+            },
+        }
+
         source = "https://" + "/".join(
             [
                 v[0].item.source.endpoint.host,
@@ -81,6 +94,7 @@ class BotRewriter(PreProcess):
                 formated_tax[i["term"]] = [i["tax_id"]]
 
         results = {
+            "raw": raw,
             "source": source,
             "target": target,
             "language": language,
@@ -96,6 +110,7 @@ class BotRewriter(PreProcess):
         article
         id = article.id
         post_id = article.post_id
+        mapping = article.map
         article_map = self.__serialize_map(article.map)
         source = article_map["source"] + "/" + str(post_id)
         target = article_map["target"]
@@ -106,6 +121,7 @@ class BotRewriter(PreProcess):
             response_data = response.json()
             data = ArticleDataFromSource(
                 id=id,
+                mapping=mapping,
                 source=source,
                 target=target,
                 language=language,
@@ -116,11 +132,11 @@ class BotRewriter(PreProcess):
         except Exception as e:
             raise e
 
-    def __rewrite(self, article_data: ArticleDataFromSource) -> ArticleRewrited:
-        draft_id = article_data.id
-        content = self.__content_cleaner(article_data.data["content"]["rendered"])
-        lang_source = article_data.language["from"]
-        lang_target = article_data.language["to"]
+    def __rewrite(self, source_data: ArticleDataFromSource) -> ArticleRewrited:
+        draft_id = source_data.id
+        content = self.__content_cleaner(source_data.data["content"]["rendered"])
+        lang_source = source_data.language["from"]
+        lang_target = source_data.language["to"]
         try:
             new_article = ai.article_to_article(
                 ArticleToArticleInput(
@@ -130,17 +146,56 @@ class BotRewriter(PreProcess):
                 )
             )
 
-            return ArticleRewrited(
+            rewrited = ArticleRewrited(
                 id=draft_id,
                 rewrited=new_article,
             )
+            self.__rewrited.append(rewrited)
+            return rewrited
 
         except Exception as e:
             raise e
 
+    def __image_handler(self, source_data: ArticleDataFromSource):
+        draft_id = source_data.id
+        mapping = self.__serialize_map(source_data.mapping)["raw"]
+        source = mapping["source"]["host"]
+        path = mapping["source"]["path"]
+        featured_media_id: int = source_data.data["featured_media"]
+        featured_media_data: FeaturedMediaData = self.get_featured_image_link(
+            featured_media_id, source, path=path
+        )
+        image_links = self.get_image_links(source_data.data["content"]["rendered"])
+
+        return ImagesData(
+            id=draft_id,
+            source=source,
+            featured_media=FeaturedMediaData(**featured_media_data),
+            body_images=image_links,
+        )
+
+    def __iframe_handler(self, source_data: ArticleDataFromSource):
+        draft_id = source_data.id
+        mapping = self.__serialize_map(source_data.mapping)["raw"]
+        source = mapping["source"]["host"]
+        iframe = self.get_iframe(source_data.data["content"]["rendered"])
+
+        return IframeData(
+            id=draft_id,
+            source=source,
+            link=iframe,
+        )
+
     def write(self, count: int = 1):
         response = self.__get_articles_from_db(count)
+        results = []
         for article in response:
             self.__get_source_data(article)
-        results = [self.__rewrite(article) for article in self.__source_data]
+        for article in self.__source_data:
+            rewrited = self.__rewrite(article)
+            images = self.__image_handler(article)
+            iframe = self.__iframe_handler(article)
+            results.append(
+                ArticleWriteOutput(rewrited=rewrited, images=images, iframe=iframe)
+            )
         return results

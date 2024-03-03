@@ -39,6 +39,7 @@ class ArticleData(BaseModel):
 
 class ArticleDataFromSource(BaseModel):
     id: int
+    mapping: List[ArticleMap]
     source: str
     target: str
     language: dict[str, str]
@@ -48,3 +49,29 @@ class ArticleDataFromSource(BaseModel):
 class ArticleRewrited(BaseModel):
     id: int
     rewrited: ArticleToArticleOutput
+
+
+class FeaturedMediaData(BaseModel):
+    url: str
+    title: str = ""
+    caption: str = ""
+    alt: str = ""
+
+
+class ImagesData(BaseModel):
+    id: int
+    source: str
+    featured_media: FeaturedMediaData
+    body_images: List[str]
+
+
+class IframeData(BaseModel):
+    id: int
+    source: str
+    link: List[str]
+
+
+class ArticleWriteOutput(BaseModel):
+    rewrited: ArticleRewrited
+    images: ImagesData
+    iframe: IframeData
