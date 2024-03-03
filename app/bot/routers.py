@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from .models import CrawlerResponse
 from .crawler.controller import BotCrawler
-from .writer.controller import BotWriter
+from .writer.controller import BotRewriter
 from typing import List
 
 router = APIRouter(prefix="/bot", tags=["bot"])
@@ -29,11 +29,11 @@ def bot_crawler():
     return data
 
 
-@router.post("/write")
+@router.post("/rewrite")
 def write_drafted_post(post_count: int = 1):
     """
     This endpoint will check the 'draft' posts from database.
     """
-    bot = BotWriter()
+    bot = BotRewriter()
     data = bot.write(post_count)
     return data

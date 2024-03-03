@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import List, Dict
 from .crawler.models.articles import SubmittedArticles
+from modules.ai.models import ArticleToArticleOutput
 
 
 class CrawlerResponse(SubmittedArticles, BaseModel):
@@ -15,7 +16,7 @@ class WriterArticleMap(BaseModel):
 
 
 class WriterResponse(BaseModel):
-    id: int
-    title: str
-    post_id: int
-    map: WriterArticleMap
+    source: str
+    target: str
+    language: Dict[str, str]
+    result: ArticleToArticleOutput

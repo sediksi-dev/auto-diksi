@@ -2,7 +2,6 @@ from typing import List
 from langchain.pydantic_v1 import BaseModel
 from .tasks.create_outline.models import OutlineArticle
 from .tasks.create_seo_data.models import SEOData
-
 from .tasks.create_outline.models import CreateOutlineFromArticleArgs
 
 
