@@ -11,7 +11,7 @@ from .models.articles import (
     FeaturedMediaData,
     ImagesData,
     IframeData,
-    ArticleWriteOutput
+    ArticleWriteOutput,
 )
 
 
@@ -19,6 +19,11 @@ from modules.supabase.db import db
 from modules.preprocessor.config import PreProcess
 from modules.ai.main import AI
 from modules.ai.models import ArticleToArticleInput
+
+# This is the test ai. For development purposes only
+from modules.ai.test_ai import create_new_article
+
+from helper.html_formatter import format_data_to_html
 
 ai = AI()
 
@@ -195,7 +200,16 @@ class BotRewriter(PreProcess):
             rewrited = self.__rewrite(article)
             images = self.__image_handler(article)
             iframe = self.__iframe_handler(article)
-            results.append(
-                ArticleWriteOutput(rewrited=rewrited, images=images, iframe=iframe)
+            article_data = ArticleWriteOutput(
+                content=rewrited, images=images, iframe=iframe
             )
+            html_content = format_data_to_html(article_data)
+            results.append({"data": article_data, "html": html_content})
         return results
+
+    def write_test(self, count: int = 1):
+        article = self.__get_articles_from_db(count)
+        article_data = self.__get_source_data(article[0])
+        content = self.__content_cleaner(article_data.data["content"]["rendered"])
+        new_article = create_new_article(content)
+        return new_article

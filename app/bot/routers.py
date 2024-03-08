@@ -7,13 +7,6 @@ from typing import List
 router = APIRouter(prefix="/bot", tags=["bot"])
 
 
-@router.get("/")
-def read_root():
-    bot = BotCrawler()
-    config = bot.source
-    return config
-
-
 @router.post(
     "/crawl",
     response_model=List[CrawlerResponse],

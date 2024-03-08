@@ -72,6 +72,6 @@ class IframeData(BaseModel):
 
 
 class ArticleWriteOutput(BaseModel):
-    rewrited: ArticleRewrited
+    content: ArticleRewrited
     images: ImagesData
     iframe: IframeData
