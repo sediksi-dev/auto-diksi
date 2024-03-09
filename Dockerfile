@@ -5,6 +5,7 @@ WORKDIR /api
 COPY ./requirements.txt /api/requirements.txt
 
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --upgrade pip
 
 COPY ./app /api/app
 COPY ./helper /api/helper
