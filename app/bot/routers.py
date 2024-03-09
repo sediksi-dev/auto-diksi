@@ -7,6 +7,11 @@ from typing import List
 router = APIRouter(prefix="/bot", tags=["bot"])
 
 
+@router.get("/test-route", summary="Test route for bot")
+def test_route():
+    return {"message": "Bot is working!"}
+
+
 @router.post(
     "/crawl",
     response_model=List[CrawlerResponse],
