@@ -28,10 +28,10 @@ def bot_crawler():
 
 
 @router.post("/rewrite")
-def write_drafted_post(post_count: int = 1):
+def write_drafted_post(mode: str = "default", post_count: int = 1):
     """
     This endpoint will check the 'draft' posts from database.
     """
     bot = BotRewriter()
-    data = bot.write(post_count)
+    data = bot.write(mode, post_count)
     return data

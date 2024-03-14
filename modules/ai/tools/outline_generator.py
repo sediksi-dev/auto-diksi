@@ -1,12 +1,6 @@
-from typing import List
+from langchain_core.tools import tool
 from langchain.pydantic_v1 import BaseModel, Field
-
-
-# Model for the input data for `create_outline` task
-class CreateOutlineFromArticleArgs(BaseModel):
-    original_article: str
-    lang_target: str = "indonesia"
-    lang_source: str = "english"
+from typing import List
 
 
 # Model for the tools used in `create_outline` tool
@@ -30,7 +24,11 @@ class OutlineArticle(BaseModel):
         ...,
         description="Array of subheadings and detailed body text.",
     )
-    further_insights: str = Field(
-        ...,
-        description="Any additional relevant information that doesn't fit directly under the created subheadings should be compiled under a 'Further Insights' section.",
-    )
+
+
+@tool
+def outline_generator(
+    outline: OutlineArticle,
+) -> OutlineArticle:
+    """Extracted and organized important points from the original article which is contained an article structure consisting of intro and sections."""
+    return outline

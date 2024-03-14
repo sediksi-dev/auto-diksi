@@ -11,7 +11,6 @@ from .models.articles import (
     FeaturedMediaData,
     ImagesData,
     IframeData,
-    ArticleWriteOutput,
 )
 
 
@@ -20,10 +19,6 @@ from modules.preprocessor.config import PreProcess
 from modules.ai.main import AI
 from modules.ai.models import ArticleToArticleInput
 
-# This is the test ai. For development purposes only
-from modules.ai.test_ai import create_new_article
-
-from helper.html_formatter import format_data_to_html
 
 ai = AI()
 
@@ -137,24 +132,25 @@ class BotRewriter(PreProcess):
         except Exception as e:
             raise e
 
-    def __rewrite(self, source_data: ArticleDataFromSource) -> ArticleRewrited:
+    def __rewrite(self, mode, source_data: ArticleDataFromSource) -> ArticleRewrited:
         draft_id = source_data.id
         content = self.__content_cleaner(source_data.data["content"]["rendered"])
         lang_source = source_data.language["from"]
         lang_target = source_data.language["to"]
         try:
             new_article = ai.article_to_article(
-                ArticleToArticleInput(
+                mode=mode,
+                args=ArticleToArticleInput(
                     original_article=content,
                     lang_target=lang_target,
                     lang_source=lang_source,
-                )
+                ),
             )
 
-            rewrited = ArticleRewrited(
-                id=draft_id,
-                rewrited=new_article,
-            )
+            rewrited = {
+                "id": draft_id,
+                "result": new_article,
+            }
             self.__rewrited.append(rewrited)
             return rewrited
 
@@ -191,25 +187,12 @@ class BotRewriter(PreProcess):
             link=iframe,
         )
 
-    def write(self, count: int = 1):
+    def write(self, mode: str, count: int = 1):
         response = self.__get_articles_from_db(count)
         results = []
         for article in response:
             self.__get_source_data(article)
         for article in self.__source_data:
-            rewrited = self.__rewrite(article)
-            images = self.__image_handler(article)
-            iframe = self.__iframe_handler(article)
-            article_data = ArticleWriteOutput(
-                content=rewrited, images=images, iframe=iframe
-            )
-            html_content = format_data_to_html(article_data)
-            results.append({"data": article_data, "html": html_content})
+            rewrited = self.__rewrite(mode, article)
+            results.append(rewrited)
         return results
-
-    def write_test(self, count: int = 1):
-        article = self.__get_articles_from_db(count)
-        article_data = self.__get_source_data(article[0])
-        content = self.__content_cleaner(article_data.data["content"]["rendered"])
-        new_article = create_new_article(content)
-        return new_article
