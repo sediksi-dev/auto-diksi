@@ -1,4 +1,4 @@
-from modules.ai.models import ArticleToArticleInput
+from modules.ai.models import ArticleToArticleInput, ArticleToArticleOutput
 
 from modules.ai.tasks.create_seo_data import create_seo_data, CreateSEODataArgs
 from modules.ai.tasks.create_intro import create_intro, CreateIntroArgs
@@ -85,9 +85,9 @@ def default_rewriter(args: ArticleToArticleInput):
         body_text.append(paragraph)
         full_article = intro + "\n" + "\n".join(body_text)
 
-    return {
-        "title": seo_data.seo_title,
-        "description": seo_data.meta_description,
-        "keyword": seo_data.keyword,
-        "article": full_article,
-    }
+    return ArticleToArticleOutput(
+        title=seo_data.seo_title,
+        description=seo_data.meta_description,
+        keyword=seo_data.keyword,
+        article=full_article,
+    )

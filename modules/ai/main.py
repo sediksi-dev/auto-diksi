@@ -7,12 +7,6 @@ class AI:
     def __init__(self):
         pass
 
-    # def __modify_outline(self, outline: OutlineArticle) -> str:
-    #     subheadings = "\n".join(
-    #         [f"- {section.subheading}" for section in outline.sections]
-    #     )
-    #     return subheadings
-
     def article_to_article(
         self, mode: str, args: ArticleToArticleInput
     ) -> ArticleToArticleOutput:
