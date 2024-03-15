@@ -157,6 +157,12 @@ class BotRewriter(PreProcess):
         except Exception as e:
             raise e
 
+    def __article_formater(
+        self,
+        article: ArticleRewrited
+    ):
+        pass
+
     def __image_handler(self, source_data: ArticleDataFromSource):
         draft_id = source_data.id
         mapping = self.__serialize_map(source_data.mapping)["raw"]
@@ -194,5 +200,11 @@ class BotRewriter(PreProcess):
             self.__get_source_data(article)
         for article in self.__source_data:
             rewrited = self.__rewrite(mode, article)
-            results.append(rewrited)
+            images = self.__image_handler(article)
+            results.append(
+                {
+                    "content": rewrited,
+                    "featured_media": images.featured_media,
+                }
+            )
         return results

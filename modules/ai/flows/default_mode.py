@@ -13,6 +13,7 @@ from modules.ai.tasks.create_outline_from_facts import (
 )
 
 from modules.ai.tasks.extract_info import extract_info
+from modules.ai.tasks.add_image_to_text import add_image_to_text
 
 from helper.outline_to_str import outline_to_str
 
@@ -82,8 +83,15 @@ def default_rewriter(args: ArticleToArticleInput):
                 informations=section.information,
             )
         )
+        try:
+            paragraph = add_image_to_text(paragraph)
+        except Exception:
+            print("Error adding image to text")
+            continue
+
         body_text.append(paragraph)
-        full_article = intro + "\n" + "\n".join(body_text)
+
+    full_article = intro + "\n" + "\n".join(body_text)
 
     return ArticleToArticleOutput(
         title=seo_data.seo_title,
