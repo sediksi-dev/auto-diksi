@@ -20,4 +20,4 @@ class AI:
         elif mode == "test":
             return test_mode_rewriter(args)
         else:
-            raise ValueError(f"Invalid mode: {mode}")
+            raise ValueError("Invalid mode")

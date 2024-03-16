@@ -1,20 +1,23 @@
-from fastapi import APIRouter
-from .models import CrawlerResponse
-from .crawler.controller import BotCrawler
-from .writer.controller import BotRewriter
 from typing import List
+from fastapi import APIRouter
+
+from .crawler.models.articles import SubmittedArticles
+from .crawler.controller import BotCrawler
+
+from .writer.controller import BotRewriter
+
+from .models import PostToWpArgs
+
+from modules.wp.main import WP
+
+# from modules.wp.models import WpPostData
 
 router = APIRouter(prefix="/bot", tags=["bot"])
 
 
-@router.get("/test-route", summary="Test route for bot")
-def test_route():
-    return {"message": "Bot is working!"}
-
-
 @router.post(
     "/crawl",
-    response_model=List[CrawlerResponse],
+    response_model=List[SubmittedArticles],
     summary="Crawl the source and save the posts to the database as draft",
 )
 def bot_crawler():
@@ -27,11 +30,21 @@ def bot_crawler():
     return data
 
 
-@router.post("/rewrite")
-def write_drafted_post(mode: str = "default", post_count: int = 1):
+@router.post("/rewrite", summary="Rewrite the drafted posts")
+def write_drafted_post(mode: str = "default", id: int = None):
     """
     This endpoint will check the 'draft' posts from database.
     """
-    bot = BotRewriter()
-    data = bot.write(mode, post_count)
+    bot = BotRewriter(id)
+    data = bot.write(mode)
     return data
+
+
+@router.post("/wp", summary="Post the drafted articles to the WordPress site")
+def post_to_wp(draft_id: int, data: PostToWpArgs):
+    """
+    This endpoint will post the drafted articles to the WordPress site.
+    """
+    wp = WP()
+    response = wp.post_to_wp(draft_id, data=data)
+    return response

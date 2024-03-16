@@ -1,54 +1,14 @@
-from langchain.pydantic_v1 import BaseModel
-from typing import List, Any
+from pydantic import BaseModel, Field
+from typing import Any
 
 from modules.ai.models import ArticleToArticleOutput
 
 
-class Endpoint(BaseModel):
-    host: str
-    path: str
-    type: str
-    lang: str
-
-
-class Source(BaseModel):
-    endpoint: Endpoint
-
-
-class Target(BaseModel):
-    term: str
-    tax_id: int
-    endpoint: Endpoint
-
-
-class Item(BaseModel):
-    source: Source
-    target: Target
-
-
-class ArticleMap(BaseModel):
-    item: Item
-
-
-class ArticleData(BaseModel):
-    id: int
-    title: str
-    post_id: int
-    map: List[ArticleMap]
-
-
 class ArticleDataFromSource(BaseModel):
-    id: int
-    mapping: List[ArticleMap]
     source: str
     target: str
     language: dict[str, str]
-    data: Any
-
-
-class ArticleRewrited(BaseModel):
-    id: int
-    rewrited: ArticleToArticleOutput
+    wp_data: Any
 
 
 class FeaturedMediaData(BaseModel):
@@ -58,20 +18,20 @@ class FeaturedMediaData(BaseModel):
     alt: str = ""
 
 
-class ImagesData(BaseModel):
-    id: int
-    source: str
-    featured_media: FeaturedMediaData
-    body_images: List[str]
+class ArticleWriteOutputLanguage(BaseModel):
+    from_: str = Field(..., alias="from")
+    to: str
 
 
-class IframeData(BaseModel):
-    id: int
-    source: str
-    link: List[str]
+class ArticleWriteOutputRaw(BaseModel):
+    title: str
+    post_id: int
+    link: str
+    languange: ArticleWriteOutputLanguage
 
 
 class ArticleWriteOutput(BaseModel):
-    content: ArticleRewrited
-    images: ImagesData
-    iframe: IframeData
+    draft_id: int
+    raw: ArticleWriteOutputRaw
+    result: ArticleToArticleOutput
+    featured_media: FeaturedMediaData
