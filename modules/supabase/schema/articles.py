@@ -26,7 +26,9 @@ class Article(BaseModel):
     public_url: Optional[HttpUrl] = Field(
         default=None, description="Public URL of the post."
     )
-    post_id: int = Field(..., description="Post id in target website.")
+    post_id: Optional[int] = Field(
+        default=None, description="Post id in target website."
+    )
     status: PostStatuses = Field(
         default=PostStatuses.draft, description="Status of the post."
     )

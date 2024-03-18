@@ -2,7 +2,7 @@ import requests
 
 from typing import List
 
-from .models.articles import (
+from .models import (
     ArticleDataFromSource,
     FeaturedMediaData,
     ArticleWriteOutput,
@@ -23,7 +23,7 @@ ai = AI()
 
 
 class BotRewriter(PreProcess):
-    def __init__(self, id: int):
+    def __init__(self, id: int = None):
         super().__init__()
         self.__draft_id: int = id
         self.__draft: DraftedArticle = self.__get_drafted_posts(self.__draft_id)
@@ -136,7 +136,7 @@ class BotRewriter(PreProcess):
         except Exception as e:
             return str(e)
 
-    def write(self, mode):
+    def write(self, mode) -> ArticleWriteOutput:
         id = self.__draft_id
         draft = self.__draft
         data = self.__draft_data

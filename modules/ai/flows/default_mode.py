@@ -84,12 +84,13 @@ def default_rewriter(args: ArticleToArticleInput) -> ArticleToArticleOutput:
             )
         )
         try:
-            paragraph = add_image_to_text(paragraph)
+            result = add_image_to_text(paragraph)
         except Exception:
             print("Error adding image to text")
+            result = paragraph
             continue
 
-        body_text.append(paragraph)
+        body_text.append(result)
 
     full_article = intro + "\n" + "\n".join(body_text)
 
