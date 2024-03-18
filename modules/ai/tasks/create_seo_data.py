@@ -6,7 +6,7 @@ from langchain.output_parsers import JsonOutputKeyToolsParser
 from langchain.pydantic_v1 import BaseModel
 
 from helper.md_prompt import prompt_md_by_tag
-
+from helper.error_handling import error_handler
 from modules.ai.tools.seo_analyst import SEOData, seo_analyst
 
 load_dotenv()
@@ -18,6 +18,7 @@ class CreateSEODataArgs(BaseModel):
     lang_target: str = "indonesia"
 
 
+@error_handler("ai", "Error when creating SEO data")
 def create_seo_data(args: CreateSEODataArgs) -> SEOData:
     openai_config = {
         "model": "gpt-3.5-turbo-0125",

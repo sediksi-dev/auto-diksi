@@ -1,13 +1,14 @@
+import logging
+
 from dotenv import load_dotenv
 from helper.md_prompt import prompt_md_by_tag
-
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate
-from langchain.pydantic_v1 import BaseModel
+from langchain.pydantic_v1 import BaseModel, ValidationError
 
 from modules.ai.tools.outline_generator import OutlineArticle, outline_generator
-
+from helper.error_handling import error_handler
 
 load_dotenv()
 
@@ -18,6 +19,7 @@ class CreateArticleFromFacts(BaseModel):
     lang_source: str = "english"
 
 
+@error_handler("ai", "Error when creating an outline from facts.")
 def create_outline_from_facts(args: CreateArticleFromFacts) -> OutlineArticle:
     # Define the configuration for the OpenAI model
     openai_config = {
@@ -62,7 +64,6 @@ def create_outline_from_facts(args: CreateArticleFromFacts) -> OutlineArticle:
     )
 
     try:
-        response = OutlineArticle(**response["outline"])
-        return response
-    except Exception as e:
-        raise e
+        return OutlineArticle(**response["outline"])
+    except ValidationError as vld_err:
+        logging.error(f"Outline not created due to validation error: {str(vld_err)}")

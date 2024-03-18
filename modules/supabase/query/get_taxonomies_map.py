@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from modules.supabase.db import db
 from app.bot.crawler.models import WpPostData
 from urllib.parse import urlparse
+from helper.error_handling import error_handler
 
 
 class TaxMappingSourceData(BaseModel):
@@ -16,6 +17,7 @@ class TaxMapping(BaseModel):
     source: TaxMappingSourceData
 
 
+@error_handler("db", "Error when mapping taxonomies")
 def get_taxonomies_map(article: WpPostData) -> list[TaxMapping]:
     parsed_url = urlparse(article.link)
     host = parsed_url.netloc

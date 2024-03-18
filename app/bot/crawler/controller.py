@@ -1,6 +1,7 @@
 from typing import List
 import requests
 from modules.supabase.db import db
+from helper.error_handling import error_handler
 
 from .models import WpPostData, ArticleToTaxMapping, SubmittedArticles
 
@@ -24,6 +25,7 @@ class BotCrawler:
         sources = get_web_sources()
         return sources
 
+    @error_handler("wp", "Error when get all wp posts from sources")
     def __get_wp_articles(self, src: WebSources) -> List[WpPostData]:
         count = len(src.taxonomies) * self.__multiplier
         per_page = count if count < 100 else 100
@@ -35,6 +37,7 @@ class BotCrawler:
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.36"
             },
         )
+        response.raise_for_status()
         response = response.json()
         articles = [WpPostData(**article) for article in response]
         return articles
@@ -42,7 +45,6 @@ class BotCrawler:
     def __filter_posts(self, wp_posts: List[WpPostData], src: WebSources, key: str):
         source = src.model_dump()
         posts = [post.model_dump() for post in wp_posts]
-        # Mendapatkan daftar id dari data pembanding
         ids = [
             tax["taxonomy_id"]
             for tax in source["taxonomies"]
@@ -87,8 +89,6 @@ class BotCrawler:
             for article in articles
             if article.link not in [x["source_url"] for x in posted_articles]
         ]
-        print("Total Articles", len(articles))
-        print("Filtered Articles Total", len(filtered_articles))
         return filtered_articles
 
     def __save_articles_to_db(self, article: WpPostData) -> Article:

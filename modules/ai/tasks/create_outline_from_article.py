@@ -1,13 +1,14 @@
+import logging
 from dotenv import load_dotenv
 from helper.md_prompt import prompt_md_by_tag
-from langchain.pydantic_v1 import BaseModel
+from langchain.pydantic_v1 import BaseModel, ValidationError
 
 from langchain_openai import ChatOpenAI
 from langchain.output_parsers import JsonOutputKeyToolsParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from modules.ai.tools.outline_generator import OutlineArticle, outline_generator
-
+from helper.error_handling import error_handler
 
 load_dotenv()
 
@@ -18,6 +19,7 @@ class CreateOutlineFromArticleArgs(BaseModel):
     lang_source: str = "english"
 
 
+@error_handler("ai", "Error when creating an outline from an article.")
 def create_outline_from_article(args: CreateOutlineFromArticleArgs) -> OutlineArticle:
     # Define the configuration for the OpenAI model
     openai_config = {
@@ -63,5 +65,7 @@ def create_outline_from_article(args: CreateOutlineFromArticleArgs) -> OutlineAr
 
     try:
         return OutlineArticle(**ai_result["outline"])
-    except Exception as e:
-        raise e
+    except ValidationError as e:
+        logging.error(
+            f"Error when creating an outline from an article. Reason: {str(e)}"
+        )

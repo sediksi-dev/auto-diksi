@@ -4,6 +4,7 @@ from typing import List
 
 from .models import (
     ArticleDataFromSource,
+    ArticleWriteOutputRaw,
     FeaturedMediaData,
     ArticleWriteOutput,
 )
@@ -16,7 +17,7 @@ from modules.supabase.query.models.drafted_article import (
 
 from modules.preprocessor.config import PreProcess
 from modules.ai.main import AI
-from modules.ai.models import ArticleToArticleInput
+from modules.ai.models import ArticleToArticleInput, ArticleToArticleOutput
 
 
 ai = AI()
@@ -43,19 +44,16 @@ class BotRewriter(PreProcess):
         target = article_map["target"]
         language = article_map["language"]
 
-        try:
-            response = requests.get(source)
-            response_data = response.json()
-            data = ArticleDataFromSource(
-                language=language,
-                source=source,
-                target=target,
-                wp_data=response_data,
-            )
-            return data
-        except Exception as e:
-            print("Error: ", e)
-            return None
+        response = requests.get(source)
+        response.raise_for_status()
+        response_data = response.json()
+        data = ArticleDataFromSource(
+            language=language,
+            source=source,
+            target=target,
+            wp_data=response_data,
+        )
+        return data
 
     def __serialize_map(self, v: List[ArticleMap]):
         taxonomies = []
@@ -118,7 +116,9 @@ class BotRewriter(PreProcess):
         results = self.get_featured_image_link(id, host, path)
         return FeaturedMediaData(**results)
 
-    def __rewrite(self, mode, source_data: ArticleDataFromSource) -> str:
+    def __rewrite(
+        self, mode, source_data: ArticleDataFromSource
+    ) -> ArticleToArticleOutput:
         content = self.__content_cleaner(source_data.wp_data["content"]["rendered"])
         lang_source = source_data.language["from"]
         lang_target = source_data.language["to"]
@@ -147,16 +147,15 @@ class BotRewriter(PreProcess):
         )
 
         result = self.__rewrite(mode, data)
-        response = {
-            "draft_id": id,
-            "raw": {
-                "title": draft.title,
-                "post_id": draft.post_id,
-                "link": data.wp_data["link"],
-                "languange": data.language,
-            },
-            "result": result,
-            "featured_media": featured_media,
-        }
 
-        return ArticleWriteOutput(**response)
+        return ArticleWriteOutput(
+            draft_id=id,
+            raw=ArticleWriteOutputRaw(
+                title=draft.title,
+                post_id=draft.post_id,
+                link=data.wp_data["link"],
+                languange=data.language,
+            ),
+            result=result,
+            featured_media=featured_media,
+        )

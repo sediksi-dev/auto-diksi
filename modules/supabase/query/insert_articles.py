@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from modules.supabase.db import db
 from modules.supabase.schema.articles import Article
+from helper.error_handling import error_handler
 
 
 class ArticleToInsert(BaseModel):
@@ -10,6 +11,7 @@ class ArticleToInsert(BaseModel):
     link: str
 
 
+@error_handler("db", "Error when insert articles to database")
 def insert_articles(article: ArticleToInsert):
     res, _ = (
         db.table("articles")

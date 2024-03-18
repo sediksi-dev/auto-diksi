@@ -132,10 +132,17 @@ class WP:
             )
 
             result_data = response.json()
+
+            link = (
+                result_data.get("link")
+                if result_data.get("link")
+                else result_data.get("guid").get("rendered")
+            )
+
             self.__update_draft_status(
                 draft_id,
                 "published",
-                public_url=result_data["link"],
+                public_url=link,
                 post_id=result_data["id"],
             )
             return result_data

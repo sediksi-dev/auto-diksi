@@ -11,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from langchain_core.runnables import RunnableLambda
-
+from helper.error_handling import error_handler
 
 load_dotenv()
 
@@ -40,6 +40,7 @@ def get_image_query(text: str) -> str:
     return query
 
 
+@error_handler("ai", "Error when creating a search image query.")
 def create_search_image_query(text: str, is_summarized=False) -> str:
     """Create a query from article to search for an image."""
 

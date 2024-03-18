@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from modules.supabase.db import db
+from helper.error_handling import error_handler
 
 
 class TaxonomyMap(BaseModel):
@@ -9,6 +10,7 @@ class TaxonomyMap(BaseModel):
     tax_id: int
 
 
+@error_handler("db", "Error when mapping taxonomy by draft id")
 def get_taxonomy_map_by_draft_id(draft_id: int):
     table_name = "articles_mapping"
     query = (

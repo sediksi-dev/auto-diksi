@@ -1,10 +1,7 @@
 from pydantic import BaseModel, Field
 from modules.supabase.db import db
-
-
-class Credentials(BaseModel):
-    user: str
-    pass_: str = Field(..., alias="pass")
+from helper.error_handling import error_handler
+from .get_credentials_by_host import get_credentials_by_host, Credentials
 
 
 class WebData(BaseModel):
@@ -18,13 +15,12 @@ class GetWebDataByHost(BaseModel):
     credentials: Credentials = Field(..., alias="auth")
 
 
+@error_handler("db", "Error when getting web by host")
 def get_web_by_host(host: str) -> GetWebDataByHost:
     query = (
         "host:url",
         "path:api_endpoint",
         "type:post_type",
-        "user: auth_username",
-        "pass: auth_token",
     )
     res, _ = db.table("web").select(*query).eq("url", host).single().execute()
     result = res[1]
@@ -33,9 +29,10 @@ def get_web_by_host(host: str) -> GetWebDataByHost:
         "path": result.get("path"),
         "type": result.get("type"),
     }
-    credentials = {"user": result.get("user"), "pass": result.get("pass")}
+
+    credentials = get_credentials_by_host(host)
 
     return GetWebDataByHost(
         web=WebData(**web_data),
-        auth=Credentials(**credentials),
+        auth=credentials,
     )

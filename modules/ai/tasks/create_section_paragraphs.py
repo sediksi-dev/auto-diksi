@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.pydantic_v1 import BaseModel
 from langchain_core.output_parsers import StrOutputParser
-
+from helper.error_handling import error_handler
 from helper.md_prompt import prompt_md_by_tag
 
 load_dotenv()
@@ -27,6 +27,7 @@ class CreateSectionParagraphArgs(BaseModel):
     informations: List[str]
 
 
+@error_handler("ai", "Error when creating a section paragraphs.")
 def create_section_paragraphs(args: CreateSectionParagraphArgs) -> str:
     """ """
     openai_config = {

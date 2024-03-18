@@ -11,11 +11,12 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
 from langchain_core.prompts import ChatPromptTemplate
-
+from helper.error_handling import error_handler
 
 load_dotenv()
 
 
+@error_handler("ai", "Error when extracting information from the article.")
 def extract_info(original_article: str):
     template_prompts = prompt_md_by_tag(
         "modules/ai/prompts/extract_info.md",

@@ -2,6 +2,7 @@ from langchain.pydantic_v1 import BaseModel
 from helper.md_prompt import prompt_md_by_tag
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
+from helper.error_handling import error_handler
 
 
 # Define the models for input data used by `create_intro` function
@@ -16,6 +17,7 @@ class CreateIntroArgs(BaseModel):
     tone: str = "neutral"
 
 
+@error_handler("ai", "Error when creating an intro")
 def create_intro(args: CreateIntroArgs) -> str:
     # Define the configuration for the OpenAI model
     openai_config = {
@@ -39,9 +41,9 @@ def create_intro(args: CreateIntroArgs) -> str:
         [("system", system_prompt), ("human", human_prompt)]
     )
 
-    analysis_seo = prompts | model
+    create_intro = prompts | model
 
-    response = analysis_seo.invoke(
+    response = create_intro.invoke(
         {
             "keyword": args.keyword,
             "title": args.title,
@@ -52,14 +54,8 @@ def create_intro(args: CreateIntroArgs) -> str:
             "style": args.style,
             "tone": args.tone,
         },
-        config={
-            "run_name": "CreateIntro",
-            "tags": ["create_info", "openai"]
-        }
+        config={"run_name": "CreateIntro", "tags": ["create_info", "openai"]},
     )
 
-    try:
-        results = response.content
-        return results
-    except KeyError:
-        raise ValueError("Failed to analyze the outline")
+    results = response.content
+    return results

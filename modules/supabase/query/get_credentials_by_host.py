@@ -1,17 +1,21 @@
 from pydantic import BaseModel, Field
-from modules.supabase.db import db
+from helper.error_handling import error_handler
+from .get_web_config import get_web_config
 
 
-class GetCredentialsByHost(BaseModel):
+class Credentials(BaseModel):
     user: str
     pass_: str = Field(..., alias="pass")
 
 
-def get_credentials_by_host(host: str) -> GetCredentialsByHost:
-    query = (
-        "user: auth_username",
-        "pass: auth_token",
-    )
-    res, _ = db.table("web").select(*query).eq("url", host).single().execute()
-    result = res[1]
-    return GetCredentialsByHost(**result)
+@error_handler("db", "Error when getting credentials")
+def get_credentials_by_host(host: str) -> Credentials:
+    config = get_web_config(host)
+    auth_username = config["auth_username"]
+    auth_token = config["auth_token"]
+    credentials = {
+        "user": auth_username,
+        "pass": auth_token,
+    }
+
+    return Credentials(**credentials)

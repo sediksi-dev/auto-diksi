@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from modules.supabase.db import db
+from helper.error_handling import error_handler
 
 
 class WebSourceTaxonomies(BaseModel):
@@ -17,6 +18,7 @@ class WebSources(BaseModel):
     taxonomies: List[WebSourceTaxonomies]
 
 
+@error_handler("db", "Error when getting web sources.")
 def get_web_sources() -> List[WebSources]:
     query = (
         "id",
