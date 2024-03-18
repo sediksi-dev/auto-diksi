@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
 from typing import Annotated
 from dotenv import load_dotenv
+
 import os
 
 from .crawler.controller import BotCrawler
@@ -14,6 +15,7 @@ from .models import CrawlerResponse, RewriterResponse, PostToWpArgs, PostToWpPay
 
 from helper.error_handling import AiResponseException, DatabaseException, WpException
 
+from modules.supabase.query.get_web_config_by_id import get_web_config_by_id
 
 load_dotenv()
 
@@ -58,7 +60,6 @@ def bot_crawler(
     "/rewrite", response_model=RewriterResponse, summary="Rewrite the drafted posts"
 )
 def write_drafted_post(
-    mode: str = "default",
     draft_id: int = None,
     credentials: Annotated[HTTPBasicCredentials, Depends(security)] = None,
 ):
@@ -69,7 +70,7 @@ def write_drafted_post(
         raise HTTPException(status_code=401, detail="Unauthorized")
     try:
         bot = BotRewriter(draft_id)
-        data = bot.write(mode)
+        data = bot.write()
         return {
             "status": "success",
             "message": "The articles have been rewritten.",
@@ -99,15 +100,15 @@ def post_to_wp(
 
 
 @router.post("/run", summary="Running the bot to rewrite, and post to WordPress")
-def test_bot(
-    mode: str = "default",
+def running_bot(
     credentials: Annotated[HTTPBasicCredentials, Depends(security)] = None,
 ):
     if credentials.username != auth_username or credentials.password != auth_password:
         raise HTTPException(status_code=401, detail="Unauthorized")
     try:
         bot = BotRewriter()
-        data = bot.write(mode)
+        data = bot.write()
+        status = get_web_config_by_id(data.draft_id, "status")
 
         data_to_post = PostToWpArgs(
             draft_id=data.draft_id,
@@ -115,7 +116,7 @@ def test_bot(
                 title=data.result.title,
                 content=data.result.article,
                 excerpt=data.result.description,
-                status="draft",
+                status=status,
             ),
             featured_media=data.featured_media,
         )
@@ -136,3 +137,9 @@ def test_bot(
 
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Failed. Message: {str(e)}")
+
+
+@router.get("/test", summary="Test the bot")
+def test_bot(id: int, key: str):
+    config = get_web_config_by_id(id, key)
+    return {"status": "success", "message": "Bot is working.", "data": config}

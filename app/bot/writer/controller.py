@@ -10,6 +10,7 @@ from .models import (
 )
 
 from modules.supabase.query.get_drafted_article import get_drafted_article
+from modules.supabase.query.get_web_config_by_id import get_web_config_by_id
 from modules.supabase.query.models.drafted_article import (
     ArticleMap,
     DraftedArticle,
@@ -136,8 +137,9 @@ class BotRewriter(PreProcess):
         except Exception as e:
             return str(e)
 
-    def write(self, mode) -> ArticleWriteOutput:
+    def write(self) -> ArticleWriteOutput:
         id = self.__draft_id
+        mode = get_web_config_by_id(id, "mode")
         draft = self.__draft
         data = self.__draft_data
         featured_media = self.__featured_media_handler(
