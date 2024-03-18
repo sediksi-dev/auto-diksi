@@ -137,9 +137,3 @@ def running_bot(
 
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Failed. Message: {str(e)}")
-
-
-@router.get("/test", summary="Test the bot")
-def test_bot(id: int, key: str):
-    config = get_web_config_by_id(id, key)
-    return {"status": "success", "message": "Bot is working.", "data": config}
