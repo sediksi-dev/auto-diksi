@@ -14,10 +14,9 @@ def get_web_config_by_id(draft_id: int, key: str) -> dict:
         db.table("articles_mapping")
         .select(*query)
         .eq("articles_id", draft_id)
-        .single()
         .execute()
     )
-    result = res[1]
+    result = res[1][0]
     host = result["tax_mapping"]["target"]["web"]["host"]
     web_config = get_web_config(host)
     value = web_config[key]
