@@ -26,10 +26,8 @@ async def auth(
     passkey=Security(APIKeyHeader(name="X-AGC-PASSKEY")),
 ):
     split_passkey = passkey.split(":")
-    print(passkey)
     email = split_passkey[0]
     password = split_passkey[1]
-    print(email, password, auth_email, auth_password)
     if email != auth_email or password != auth_password:
         response.headers["X-AGC-PASSKEY"] = "not allowed"
         raise HTTPException(status_code=403, detail="Invalid API Key")
