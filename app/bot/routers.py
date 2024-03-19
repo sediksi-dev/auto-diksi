@@ -1,10 +1,8 @@
-from fastapi import APIRouter, HTTPException, Depends
-from fastapi.security import HTTPBasic, HTTPBasicCredentials
-from typing import Annotated
+import os
 from dotenv import load_dotenv
 
-import os
-
+from fastapi import APIRouter, HTTPException, Depends, Security, Response
+from fastapi.security import APIKeyHeader
 from .crawler.controller import BotCrawler
 
 from .writer.controller import BotRewriter
@@ -19,11 +17,29 @@ from modules.supabase.query.get_web_config_by_id import get_web_config_by_id
 
 load_dotenv()
 
-security = HTTPBasic()
-router = APIRouter(prefix="/bot", tags=["bot"])
+auth_email = os.environ.get("API_KEY_EMAIL")
+auth_password = os.environ.get("API_KEY_PASSWORD")
 
-auth_username = os.environ.get("BASIC_AUTH_USERNAME")
-auth_password = os.environ.get("BASIC_AUTH_PASSWORD")
+
+def auth(
+    response: Response,
+    passkey=Security(APIKeyHeader(name="X-AGC-PASSKEY")),
+):
+    split_passkey = passkey.split(":")
+    email = split_passkey[0]
+    password = split_passkey[1]
+    if email != auth_email or password != auth_password:
+        response.headers["X-AGC-PASSKEY"] = "not allowed"
+        raise HTTPException(status_code=403, detail="Invalid API Key")
+    response.headers["X-AGC-PASSKEY"] = "allowed"
+    return True
+
+
+router = APIRouter(
+    prefix="/bot",
+    tags=["bot"],
+    dependencies=[Depends(auth)],
+)
 
 
 @router.post(
@@ -31,15 +47,11 @@ auth_password = os.environ.get("BASIC_AUTH_PASSWORD")
     response_model=CrawlerResponse,
     summary="Crawl the source and save the posts to the database as draft",
 )
-def bot_crawler(
-    credentials: Annotated[HTTPBasicCredentials, Depends(security)] = None,
-):
+def bot_crawler():
     """
     This endpoint will check the posts from the source and save them to the database.
     It will return the list of articles that have been saved to the database.
     """
-    if credentials.username != auth_username or credentials.password != auth_password:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     bot = BotCrawler()
     try:
         data = bot.submit_posts()
@@ -61,13 +73,10 @@ def bot_crawler(
 )
 def write_drafted_post(
     draft_id: int = None,
-    credentials: Annotated[HTTPBasicCredentials, Depends(security)] = None,
 ):
     """
     This endpoint will check the 'draft' posts from database.
     """
-    if credentials.username != auth_username or credentials.password != auth_password:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     try:
         bot = BotRewriter(draft_id)
         data = bot.write()
@@ -87,24 +96,17 @@ def write_drafted_post(
 @router.post("/uploader", summary="Post the rewrited articles to the WordPress site")
 def post_to_wp(
     data: PostToWpArgs,
-    credentials: Annotated[HTTPBasicCredentials, Depends(security)] = None,
 ):
     """
     This endpoint will post the drafted articles to the WordPress site.
     """
-    if credentials.username != auth_username or credentials.password != auth_password:
-        raise HTTPException(status_code=401, detail="Unauthorized")
     wp = BotUploader()
     response = wp.post(data)
     return response
 
 
 @router.post("/run", summary="Running the bot to rewrite, and post to WordPress")
-def running_bot(
-    credentials: Annotated[HTTPBasicCredentials, Depends(security)] = None,
-):
-    if credentials.username != auth_username or credentials.password != auth_password:
-        raise HTTPException(status_code=401, detail="Unauthorized")
+def running_bot():
     try:
         bot = BotRewriter()
         data = bot.write()
@@ -137,3 +139,8 @@ def running_bot(
 
     except Exception as e:
         raise HTTPException(status_code=403, detail=f"Failed. Message: {str(e)}")
+
+
+@router.post("/test", summary="Test the bot")
+def test_bot():
+    return {"status": "success", "message": "The bot is working."}
