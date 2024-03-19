@@ -21,13 +21,15 @@ auth_email = os.environ.get("API_KEY_EMAIL")
 auth_password = os.environ.get("API_KEY_PASSWORD")
 
 
-def auth(
+async def auth(
     response: Response,
     passkey=Security(APIKeyHeader(name="X-AGC-PASSKEY")),
 ):
     split_passkey = passkey.split(":")
+    print(passkey)
     email = split_passkey[0]
     password = split_passkey[1]
+    print(email, password, auth_email, auth_password)
     if email != auth_email or password != auth_password:
         response.headers["X-AGC-PASSKEY"] = "not allowed"
         raise HTTPException(status_code=403, detail="Invalid API Key")
@@ -47,7 +49,7 @@ router = APIRouter(
     response_model=CrawlerResponse,
     summary="Crawl the source and save the posts to the database as draft",
 )
-def bot_crawler():
+async def bot_crawler():
     """
     This endpoint will check the posts from the source and save them to the database.
     It will return the list of articles that have been saved to the database.
@@ -71,7 +73,7 @@ def bot_crawler():
 @router.post(
     "/rewrite", response_model=RewriterResponse, summary="Rewrite the drafted posts"
 )
-def write_drafted_post(
+async def write_drafted_post(
     draft_id: int = None,
 ):
     """
@@ -94,7 +96,7 @@ def write_drafted_post(
 
 
 @router.post("/uploader", summary="Post the rewrited articles to the WordPress site")
-def post_to_wp(
+async def post_to_wp(
     data: PostToWpArgs,
 ):
     """
@@ -106,7 +108,7 @@ def post_to_wp(
 
 
 @router.post("/run", summary="Running the bot to rewrite, and post to WordPress")
-def running_bot():
+async def running_bot():
     try:
         bot = BotRewriter()
         data = bot.write()
