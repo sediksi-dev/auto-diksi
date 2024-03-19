@@ -24,3 +24,5 @@ services:
       - LANGCHAIN_ENDPOINT=${LANGCHAIN_ENDPOINT}
       - LANGCHAIN_API_KEY=${LANGCHAIN_API_KEY}
       - LANGCHAIN_PROJECT=${LANGCHAIN_PROJECT}
+    volumes:
+      - ./modules/wp/temp:/api/modules/wp/temp
