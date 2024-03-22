@@ -32,5 +32,17 @@ def get_drafted_article(id: int = None) -> DraftedArticle:
             .single()
             .execute()
         )
-    result = DraftedArticle(**res[1])
-    return result
+
+    results = res[1]
+
+    if results is None:
+        return []
+
+    if len(results) == 0:
+        return []
+
+    try:
+        result = DraftedArticle(**results)
+        return result
+    except Exception as e:
+        raise e

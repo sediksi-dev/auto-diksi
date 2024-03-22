@@ -1,33 +1,41 @@
-class AiResponseException(Exception):
-    def __init__(self, status_code: int, message: str):
-        self.status_code = status_code
+class BaseCustomException(Exception):
+    """Base class for custom exception classes."""
+
+    def __init__(self, message: str, func: str = None):
         self.message = message
+        self.func = func
+        self.__status_code = self.status_code if hasattr(self, "status_code") else 500
         super().__init__(self.message)
 
-    def __str__(self):
-        return f"[AI_RESPONSE_ERROR] Error When Processing AI Response: {self.message}"
-
-
-class WpException(Exception):
-    def __init__(self, status_code: int, message: str):
-        self.status_code = status_code
-        self.message = message
-        super().__init__(self.message)
+    @property
+    def status_code(self):
+        return self.__status_code
 
     def __str__(self):
-        return f"[WP_RESPONSE_ERROR] Error When Communicating with WordPress: {self.message}"
+        func = f" on `{self.func}`" if self.func else ""
+        msg = f"[{self.prefix}] {self.message}{func} ({self.__status_code})"
+        return msg
 
 
-class DatabaseException(Exception):
-    def __init__(self, status_code: int, message: str):
-        self.status_code = status_code
-        self.message = message
-        super().__init__(self.message)
+class AiResponseException(BaseCustomException):
+    """Exception for errors related to AI responses."""
 
-    def __str__(self):
-        return (
-            f"[DATABASE_ERROR] Error When Communicating with Database: {self.message}"
-        )
+    status_code = 511
+    prefix = "AI_ERROR"
+
+
+class WpException(BaseCustomException):
+    """Exception for errors related to WordPress interactions."""
+
+    status_code = 512
+    prefix = "WORDPRESS_ERROR"
+
+
+class DatabaseException(BaseCustomException):
+    """Exception for errors related to database operations."""
+
+    status_code = 513
+    prefix = "DATABASE_ERROR"
 
 
 def error_handler(type, msg):
@@ -37,11 +45,11 @@ def error_handler(type, msg):
                 return func(*args, **kwargs)
             except Exception as e:
                 if type == "ai":
-                    raise AiResponseException(502, f"{msg}. Reason: {str(e)}")
+                    raise AiResponseException(f"{msg} >>> {str(e)}")
                 elif type == "wp":
-                    raise WpException(502, f"{msg}. Reason: {str(e)}")
+                    raise WpException(f"{msg} >>> {str(e)}")
                 elif type == "db":
-                    raise DatabaseException(502, f"{msg}. Reason: {str(e)}")
+                    raise DatabaseException(f"{msg} >>> {str(e)}")
                 else:
                     raise e
 

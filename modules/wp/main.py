@@ -106,20 +106,22 @@ class WP:
 
         web: WebData = target.get("web")
         url = target.get("target_url")
+        print(url)
         credentials: Credentials = target["credentials"]
 
         try:
-            featured_media_id = self.__upload_media(
-                web, credentials, payload.featured_media
-            )
             body = WpPostData(
                 title=data.title,
                 content=md.markdown(data.content),
                 excerpt=data.excerpt,
                 status=data.status,
                 taxonomies=tax,
-                featured_media=featured_media_id,
             )
+            featured_media_id = self.__upload_media(
+                web, credentials, payload.featured_media
+            )
+            if featured_media_id is not None:
+                body.featured_media = featured_media_id
 
             response = requests.post(
                 url,
@@ -132,10 +134,11 @@ class WP:
             )
 
             result_data = response.json()
+            print(result_data)
 
             link = (
-                result_data.get("link")
-                if result_data.get("link")
+                result_data.get("link", "")
+                if result_data.get("link") not in ["", None]
                 else result_data.get("guid").get("rendered")
             )
 

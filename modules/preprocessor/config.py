@@ -26,7 +26,22 @@ class PreProcess:
     def get_featured_image_link(
         self, id: int, source: str, path: str = "wp-json/wp/v2"
     ):
+
         url = f"https://{source}/{path}/media/{id}"
+        print(url)
+        response = requests.get(url)
+        response_data = response.json()
+        return {
+            "url": response_data["guid"]["rendered"],
+            "title": response_data["title"]["rendered"],
+            "caption": self.clean_html(response_data["caption"]["rendered"]),
+            "alt": response_data["alt_text"],
+        }
+
+    def get_featured_image_link_full(self, id: int, endpoint: str):
+
+        url = f"{endpoint}/media/{id}"
+        print(url)
         response = requests.get(url)
         response_data = response.json()
         return {
