@@ -27,7 +27,7 @@ class ArticleWriteOutputRaw(BaseModel):
     title: str
     post_id: int
     link: str
-    languange: ArticleWriteOutputLanguage
+    language: ArticleWriteOutputLanguage
 
 
 class ArticleWriteOutput(BaseModel):

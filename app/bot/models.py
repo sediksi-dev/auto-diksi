@@ -22,7 +22,7 @@ class PostToWpPayload(BaseModel):
     title: str
     content: str
     excerpt: str
-    status: str
+    status: str = "draft"
 
 
 class PostToWpArgs(BaseModel):

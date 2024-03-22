@@ -1,7 +1,6 @@
 from .models import ArticleToArticleInput, ArticleToArticleOutput
 
 from .flows.default_mode import default_rewriter
-from .flows.test_mode import test_mode_rewriter
 from .tasks.create_search_image_query import create_search_image_query
 
 
@@ -17,7 +16,5 @@ class AI:
     ) -> ArticleToArticleOutput:
         if mode == "default":
             return default_rewriter(args)
-        elif mode == "test":
-            return test_mode_rewriter(args)
         else:
             raise ValueError("Invalid mode")

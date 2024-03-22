@@ -1,163 +1,103 @@
 import requests
 
-from typing import List
-
 from .models import (
     ArticleDataFromSource,
-    ArticleWriteOutputRaw,
     FeaturedMediaData,
     ArticleWriteOutput,
 )
 
-from modules.supabase.query.get_drafted_article import get_drafted_article
-from modules.supabase.query.get_web_config_by_id import get_web_config_by_id
-from modules.supabase.query.models.drafted_article import (
-    ArticleMap,
-    DraftedArticle,
-)
+from helper import error_handling as err
+
+from modules.supabase.query.get_article_data_by_id import get_article_data_by_id
 
 from modules.preprocessor.config import PreProcess
 from modules.ai.main import AI
-from modules.ai.models import ArticleToArticleInput, ArticleToArticleOutput
+from modules.ai.models import ArticleToArticleOutput, ArticleToArticleInput
 
 
 ai = AI()
 
 
 class BotRewriter(PreProcess):
-    def __init__(self, id: int = None):
-        super().__init__()
-        self.__draft_id: int = id
-        self.__draft: DraftedArticle = self.__get_drafted_posts(self.__draft_id)
-        self.__draft_data: ArticleDataFromSource = self.__get_source_data(self.__draft)
+    def __init__(self, draft_id: int = None):
+        self.__draft_id = draft_id
+        self.__data = self.__get_data()
 
-    def __get_drafted_posts(self, id) -> DraftedArticle:
-        article_db = get_drafted_article(id)
-        if self.__draft_id is None:
-            self.__draft_id = article_db.id
-        return article_db
+    def __get_data(self):
+        return get_article_data_by_id(self.__draft_id)
 
-    def __get_source_data(self, article: DraftedArticle) -> ArticleDataFromSource:
-        post_id = article.post_id
-        mapping = article.map
-        article_map = self.__serialize_map(mapping)
-        source = article_map["source"] + "/" + str(post_id)
-        target = article_map["target"]
-        language = article_map["language"]
+    @property
+    def db_data(self):
+        return self.__data
 
-        response = requests.get(source)
-        response.raise_for_status()
-        response_data = response.json()
-        data = ArticleDataFromSource(
-            language=language,
-            source=source,
-            target=target,
-            wp_data=response_data,
-        )
-        return data
-
-    def __serialize_map(self, v: List[ArticleMap]):
-        taxonomies = []
-        raw = {
-            "source": {
-                "host": v[0].item.source.endpoint.host,
-                "path": v[0].item.source.endpoint.path,
-            },
-            "target": {
-                "host": v[0].item.target.endpoint.host,
-                "path": v[0].item.target.endpoint.path,
-            },
-        }
-
-        source = "https://" + "/".join(
-            [
-                v[0].item.source.endpoint.host,
-                v[0].item.source.endpoint.path,
-                v[0].item.source.endpoint.type,
-            ]
-        )
-        target = "https://" + "/".join(
-            [
-                v[0].item.target.endpoint.host,
-                v[0].item.target.endpoint.path,
-                v[0].item.target.endpoint.type,
-            ]
-        )
+    def __fetch_wp_data(self):
+        data = self.__data.model_dump()
+        source_url = f"{data['source']['api_endpoint']}/{data['source']['path']}/{data['wp_post_id']}"
+        target_url = f'{data["target"][0]["api_endpoint"]}/{data["target"][0]["path"]}'
         language = {
-            "from": v[0].item.source.endpoint.lang,
-            "to": v[0].item.target.endpoint.lang,
+            "from": data["source"]["config"]["language"],
+            "to": data["target"][0]["config"]["language"],
         }
-        for i in v:
-            taxonomies.append(
-                {"term": i.item.target.term, "tax_id": i.item.target.tax_id}
-            )
-        formated_tax = {}
-        for i in taxonomies:
-            if i["term"] in formated_tax:
-                formated_tax[i["term"]].append(i["tax_id"])
-            else:
-                formated_tax[i["term"]] = [i["tax_id"]]
 
-        results = {
-            "raw": raw,
-            "source": source,
-            "target": target,
-            "language": language,
-            "target_taxonomies": formated_tax,
-        }
-        return results
+        wp_response = requests.get(source_url)
+        # wp_response.raise_for_status()
+        results = wp_response.json()
 
-    def __content_cleaner(self, content: str) -> str:
-        content = self.clean_html(content)
-        return content
+        return ArticleDataFromSource(
+            language=language,
+            source=source_url,
+            target=target_url,
+            wp_data=results,
+        )
 
-    def __featured_media_handler(
-        self, id: int, host: str, path: str
-    ) -> FeaturedMediaData:
-        results = self.get_featured_image_link(id, host, path)
+    def _featured_media_handler(self, id: int, endpoint: str) -> FeaturedMediaData:
+        results = self.get_featured_image_link_full(id, endpoint)
         return FeaturedMediaData(**results)
 
-    def __rewrite(
-        self, mode, source_data: ArticleDataFromSource
+    def __writing(
+        self, mode: str, source_data: ArticleDataFromSource
     ) -> ArticleToArticleOutput:
-        content = self.__content_cleaner(source_data.wp_data["content"]["rendered"])
-        lang_source = source_data.language["from"]
-        lang_target = source_data.language["to"]
+        content = self.clean_html(source_data.wp_data["content"]["rendered"])
         try:
-            new_article = ai.article_to_article(
+            new_article: ArticleToArticleOutput = ai.article_to_article(
                 mode=mode,
                 args=ArticleToArticleInput(
                     original_article=content,
-                    lang_target=lang_target,
-                    lang_source=lang_source,
+                    lang_target=source_data.language["to"],
+                    lang_source=source_data.language["from"],
                 ),
             )
             return new_article
-
         except Exception as e:
-            return str(e)
+            raise err.AiResponseException(f"Gagal menulis artikel. {str(e)}")
 
-    def write(self) -> ArticleWriteOutput:
-        id = self.__draft_id
-        mode = get_web_config_by_id(id, "mode")
-        draft = self.__draft
-        data = self.__draft_data
-        featured_media = self.__featured_media_handler(
-            data.wp_data["featured_media"],
-            draft.map[0].item.source.endpoint.host,
-            draft.map[0].item.source.endpoint.path,
+    def rewrite(self):
+        data = self.__data.model_dump()
+        draft_id = data["draft_id"]
+        fetched = self.__fetch_wp_data()
+
+        featured_media = self._featured_media_handler(
+            id=fetched.wp_data["featured_media"],
+            endpoint=data["source"]["api_endpoint"],
         )
 
-        result = self.__rewrite(mode, data)
+        mode = data["target"][0]["config"]["mode"]
+        rewrited = self.__writing(mode, fetched)
 
-        return ArticleWriteOutput(
-            draft_id=id,
-            raw=ArticleWriteOutputRaw(
-                title=draft.title,
-                post_id=draft.post_id,
-                link=data.wp_data["link"],
-                languange=data.language,
-            ),
-            result=result,
-            featured_media=featured_media,
-        )
+        output = {
+            "draft_id": draft_id,
+            "raw": {
+                "title": data["original_title"],
+                "post_id": data["wp_post_id"],
+                "link": fetched.wp_data["link"],
+                "language": fetched.language,
+            },
+            "result": rewrited,
+            "featured_media": featured_media,
+        }
+
+        try:
+            results = ArticleWriteOutput.model_validate(output)
+            return results
+        except Exception as e:
+            raise Exception(f"Gagal memvalidasi output. {str(e)}")
