@@ -5,8 +5,8 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain.pydantic_v1 import BaseModel
 from langchain_core.output_parsers import StrOutputParser
-from helper.error_handling import error_handler
-from helper.md_prompt import prompt_md_by_tag
+from helpers.error_handling import error_handler
+from helpers.md_prompt import prompt_md_by_tag
 
 load_dotenv()
 

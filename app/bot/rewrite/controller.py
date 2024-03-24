@@ -6,7 +6,7 @@ from .models import (
     ArticleWriteOutput,
 )
 
-from helper import error_handling as err
+from helpers import error_handling as err
 
 from modules.supabase.query.get_article_data_by_id import get_article_data_by_id
 

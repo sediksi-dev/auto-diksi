@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from typing import List, Literal, Optional
 
-from .crawler.models import SubmittedArticles
-from .writer.models import ArticleWriteOutput, FeaturedMediaData
+from .crawl.models import SubmittedArticles
+from .rewrite.models import ArticleWriteOutput, FeaturedMediaData
 
 
 class DefaultResponse(BaseModel):

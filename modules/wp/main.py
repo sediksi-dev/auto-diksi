@@ -13,9 +13,9 @@ from modules.supabase.query.get_credentials_by_host import (
 from modules.supabase.query.update_article import update_article
 
 from .models import WpPostData, TargetData
-from app.bot.models import PostToWpArgs, FeaturedMediaData
+from app.bot.schemas import PostToWpArgs, FeaturedMediaData
 
-from helper import error_handling as err
+from helpers import error_handling as err
 
 
 class WP:

@@ -5,7 +5,7 @@ from modules.ai.models import ArticleToArticleInput
 from modules.ai.tasks.summarization import summarizer
 from modules.ai.tasks.create_search_image_query import create_search_image_query
 
-from helper.bing_image_search import BingImage
+from helpers.bing_image_search import BingImage
 
 from langchain_core.messages import HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI

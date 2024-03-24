@@ -1,6 +1,6 @@
 from modules.supabase.db import db
 from pydantic import BaseModel, Field
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 
 class Credentials(BaseModel):

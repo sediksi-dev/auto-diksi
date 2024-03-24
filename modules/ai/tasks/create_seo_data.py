@@ -5,8 +5,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain.output_parsers import JsonOutputKeyToolsParser
 from langchain.pydantic_v1 import BaseModel
 
-from helper.md_prompt import prompt_md_by_tag
-from helper.error_handling import error_handler
+from helpers.md_prompt import prompt_md_by_tag
+from helpers.error_handling import error_handler
 from modules.ai.tools.seo_analyst import SEOData, seo_analyst
 
 load_dotenv()

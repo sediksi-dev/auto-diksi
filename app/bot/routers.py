@@ -7,17 +7,15 @@ from fastapi import (
     Depends,
 )
 
-from helper.auth import auth
+from helpers.auth import auth
 
-from .crawler.controller import BotCrawler
+from .crawl.controller import BotCrawler
 
-from .writer.controller import BotRewriter
+from .rewrite.controller import BotRewriter
 
 from .uploader.controller import BotUploader
 
-from .helper.controllers import BotHelper
-
-from .models import CrawlerResponse, RewriterResponse, PostToWpArgs
+from .schemas import CrawlerResponse, RewriterResponse, PostToWpArgs
 
 load_dotenv()
 
@@ -126,24 +124,3 @@ def running_bot():
 
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
-
-
-@router.post("/helper/{path}", summary="Helper endpoint. This is for testing purpose")
-def helper(
-    path: str,
-    draft_id: int = None,
-):
-    bot = BotHelper(path, draft_id=draft_id)
-    try:
-        results = bot.run()
-        return results
-    except Exception as e:
-
-        raise HTTPException(
-            status_code=400,
-            detail={
-                "status": "error",
-                "message": str(e),
-                "data": None,
-            },
-        )

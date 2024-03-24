@@ -14,7 +14,7 @@ from typing import (
 )
 from enum import Enum
 from modules.supabase.db import db
-from helper import error_handling as err
+from helpers import error_handling as err
 
 
 class WebConfigKeys(str, Enum):

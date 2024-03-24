@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 from modules.supabase.db import db
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 
 class WebSourceTaxonomies(BaseModel):

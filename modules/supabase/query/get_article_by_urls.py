@@ -1,6 +1,6 @@
 from typing import List
 from modules.supabase.db import db
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 
 @error_handler("db", "Error when getting articles by url")

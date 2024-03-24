@@ -1,6 +1,6 @@
 from modules.wp.main import WP
 
-from app.bot.models import PostToWpArgs
+from app.bot.schemas import PostToWpArgs
 
 
 class BotUploader(WP):
