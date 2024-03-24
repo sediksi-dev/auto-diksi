@@ -13,7 +13,7 @@ from modules.supabase.query.get_credentials_by_host import (
 from modules.supabase.query.update_article import update_article
 
 from .models import WpPostData, TargetData
-from app.bot.schemas import PostToWpArgs, FeaturedMediaData
+from app.bot.schemas import UploaderPayload, FeaturedMediaData
 
 from helpers import error_handling as err
 
@@ -109,7 +109,7 @@ class WP:
             data = update_article(draft_id, data={"status": status, **kwargs})
         return data
 
-    def _post_to_wp(self, payload: PostToWpArgs):
+    def _post_to_wp(self, payload: UploaderPayload):
         draft_id = payload.draft_id
         data = payload.body
         featured_media = payload.featured_media

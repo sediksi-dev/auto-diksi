@@ -1,6 +1,7 @@
-from .models import ArticleToArticleInput, ArticleToArticleOutput
+from .models import ArticleToArticleInput, ArticleToArticleOutput, KeywordToArticleInput
 
-from .flows.default_mode import default_rewriter
+from .flows.bot_default_mode import bot_default_rewriter
+from .flows.seeder_default_mode import seeder_default_rewriter
 from .tasks.create_search_image_query import create_search_image_query
 
 
@@ -15,6 +16,12 @@ class AI:
         self, mode: str, args: ArticleToArticleInput
     ) -> ArticleToArticleOutput:
         if mode == "default":
-            return default_rewriter(args)
+            return bot_default_rewriter(args)
+        else:
+            raise ValueError("Invalid mode")
+
+    def keyword_to_article(self, mode: str, args: KeywordToArticleInput):
+        if mode == "default":
+            return seeder_default_rewriter(args)
         else:
             raise ValueError("Invalid mode")

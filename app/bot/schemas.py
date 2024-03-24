@@ -1,36 +1,37 @@
 from pydantic import BaseModel
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, Any
 
 from .crawl.models import SubmittedArticles
 from .rewrite.models import ArticleWriteOutput, FeaturedMediaData
 
 
+# Schema for any response that will be sent by the API
 class DefaultResponse(BaseModel):
     status: Literal["success", "error"]
     message: str = ""
 
 
-class CrawlerResponse(DefaultResponse, BaseModel):
+# Schema for the response of the crawl endpoint
+class CrawlerResponse(DefaultResponse):
     data: List[SubmittedArticles] = []
 
 
-class RewriterResponse(DefaultResponse, BaseModel):
+class RewriterResponse(DefaultResponse):
     data: ArticleWriteOutput
 
 
-class PostToWpPayload(BaseModel):
+class UploaderResponse(DefaultResponse):
+    data: Any
+
+
+# Schema for the payload of the post endpoint
+class UploaderBody(BaseModel):
     title: str
     content: str
     excerpt: str
 
 
-class PostToWpArgs(BaseModel):
+class UploaderPayload(BaseModel):
     draft_id: int
-    body: PostToWpPayload
+    body: UploaderBody
     featured_media: Optional[FeaturedMediaData] = None
-
-
-class PostToWpResponse(BaseModel):
-    message: str
-    status: str
-    url: str

@@ -15,7 +15,7 @@ from .rewrite.controller import BotRewriter
 
 from .uploader.controller import BotUploader
 
-from .schemas import CrawlerResponse, RewriterResponse, PostToWpArgs
+from .schemas import CrawlerResponse, RewriterResponse, UploaderPayload
 
 load_dotenv()
 
@@ -59,7 +59,7 @@ async def bot_crawler():
 @router.post(
     "/rewrite", response_model=RewriterResponse, summary="Rewrite the drafted posts"
 )
-async def write_drafted_post(
+async def rewriting_drafted_articles(
     draft_id: int = None,
 ):
     """
@@ -83,7 +83,7 @@ async def write_drafted_post(
 
 @router.post("/uploader", summary="Post the rewrited articles to the WordPress site")
 async def post_to_wp(
-    data: PostToWpArgs,
+    data: UploaderPayload,
 ):
     """
     This endpoint will post the drafted articles to the WordPress site.
@@ -101,20 +101,18 @@ def running_bot():
 
         data = bot.rewrite()
 
-        payload = {
-            "draft_id": draft_id,
-            "body": {
-                "title": data.result.title,
-                "content": data.result.article,
-                "excerpt": data.result.description,
-            },
-            "featured_media": data.featured_media,
-        }
-
-        print(payload)
-
         try:
-            data_to_post = PostToWpArgs.model_validate(payload)
+            data_to_post = UploaderPayload.model_validate(
+                {
+                    "draft_id": draft_id,
+                    "body": {
+                        "title": data.result.title,
+                        "content": data.result.article,
+                        "excerpt": data.result.description,
+                    },
+                    "featured_media": data.featured_media,
+                }
+            )
             wp = BotUploader()
             response = wp.post(data_to_post)
             return response

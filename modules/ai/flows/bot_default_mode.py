@@ -18,7 +18,7 @@ from modules.ai.tasks.add_image_to_text import add_image_to_text
 from helpers.outline_to_str import outline_to_str
 
 
-def default_rewriter(args: ArticleToArticleInput) -> ArticleToArticleOutput:
+def bot_default_rewriter(args: ArticleToArticleInput) -> ArticleToArticleOutput:
     """
     The flow of this mode is:
     1. Fetch original article

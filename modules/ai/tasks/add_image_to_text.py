@@ -34,6 +34,6 @@ def add_image_to_text(text: str):
         )
         alt_text = llm.invoke([message])
         md_image = f"![{alt_text.content}]({image_url} '{image_query}')"
-        return md_image + "\n\n" + text
+        return "\n\n" + md_image + "\n\n" + text
     else:
         return text
