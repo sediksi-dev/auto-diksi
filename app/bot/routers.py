@@ -4,20 +4,20 @@ from dotenv import load_dotenv
 from fastapi import (
     APIRouter,
     HTTPException,
-    # Depends,
-    Security,
-    Response,
+    Depends,
 )
-from fastapi.security import APIKeyHeader
+
+from helper.auth import auth
+
 from .crawler.controller import BotCrawler
 
 from .writer.controller import BotRewriter
 
 from .uploader.controller import BotUploader
 
-from .models import CrawlerResponse, RewriterResponse, PostToWpArgs
+from .helper.controllers import BotHelper
 
-from helper.error_handling import AiResponseException, DatabaseException, WpException
+from .models import CrawlerResponse, RewriterResponse, PostToWpArgs
 
 load_dotenv()
 
@@ -25,24 +25,10 @@ auth_email = os.environ.get("API_KEY_EMAIL")
 auth_password = os.environ.get("API_KEY_PASSWORD")
 
 
-async def auth(
-    response: Response,
-    passkey=Security(APIKeyHeader(name="X-AGC-PASSKEY")),
-):
-    split_passkey = passkey.split(":")
-    email = split_passkey[0]
-    password = split_passkey[1]
-    if email != auth_email or password != auth_password:
-        response.headers["X-AGC-PASSKEY"] = "not allowed"
-        raise HTTPException(status_code=403, detail="Invalid API Key")
-    response.headers["X-AGC-PASSKEY"] = "allowed"
-    return True
-
-
 router = APIRouter(
     prefix="/bot",
     tags=["bot"],
-    # dependencies=[Depends(auth)],
+    dependencies=[Depends(auth)],
 )
 
 
@@ -113,7 +99,6 @@ async def post_to_wp(
 def running_bot():
     try:
         bot = BotRewriter()
-        status = bot.db_data.model_dump()["target"][0]["config"]["post_status"]
         draft_id = bot.db_data.draft_id
 
         data = bot.rewrite()
@@ -124,10 +109,11 @@ def running_bot():
                 "title": data.result.title,
                 "content": data.result.article,
                 "excerpt": data.result.description,
-                "status": status,
             },
             "featured_media": data.featured_media,
         }
+
+        print(payload)
 
         try:
             data_to_post = PostToWpArgs.model_validate(payload)
@@ -138,20 +124,26 @@ def running_bot():
         except Exception as e:
             raise ValueError("Validation gagal. {}".format(str(e)))
 
-    except AiResponseException as e:
-        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
-
-    except DatabaseException as e:
-        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
-
-    except WpException as e:
-        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
-
     except Exception as e:
-        raise HTTPException(status_code=403, detail=f"Failed. Message: {str(e)}")
+        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
 
 
-@router.get("/test")
-def test_bot(id: int):
-    bt = BotRewriter(id)
-    return bt.rewrite()
+@router.post("/helper/{path}", summary="Helper endpoint. This is for testing purpose")
+def helper(
+    path: str,
+    draft_id: int = None,
+):
+    bot = BotHelper(path, draft_id=draft_id)
+    try:
+        results = bot.run()
+        return results
+    except Exception as e:
+
+        raise HTTPException(
+            status_code=400,
+            detail={
+                "status": "error",
+                "message": str(e),
+                "data": None,
+            },
+        )

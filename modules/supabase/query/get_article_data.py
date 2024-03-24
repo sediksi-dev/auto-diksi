@@ -143,29 +143,6 @@ class ArticleDataModel(BaseModel):
         return merged_data
 
 
-def res_validation(res):
-
-    if res is None:
-        raise err.DatabaseException(f"No data found for article with id {id}.")
-
-    if len(res.data["source_tax"]) is None:
-        raise err.DatabaseException(f"No source tax found for article with id {id}.")
-
-    source_url = list(
-        set([item["item"]["tax"]["web"]["url"] for item in res.data["source_url"]])
-    )
-
-    if len(source_url) > 1:
-        raise err.DatabaseException(
-            f"Multiple source urls found for article with id {id}."
-        )
-
-    if len(source_url) == 0:
-        raise err.DatabaseException(f"No source url found for article with id {id}.")
-
-    return source_url
-
-
 def get_web_query(t: Literal["source", "target"]):
     web = "web_id(*, config: web_config(*))"
     tax_data = " {}_id(*, web: {})".format(t, web)
@@ -218,7 +195,7 @@ def format_data(data):
     return formatted_data
 
 
-def get_article_data_by_id(id: int = None, status: str = None):
+def get_article_data():
     source_tax = get_web_query("source")
     target_tax = get_web_query("target")
     query = (
@@ -226,14 +203,14 @@ def get_article_data_by_id(id: int = None, status: str = None):
         "source: {}".format(source_tax),
         "target:{}".format(target_tax),
     )
-    drafter = db.table("articles").select(*query)
-    if status is not None:
-        drafter = drafter.eq("status", status)
-
-    if id is not None:
-        drafter = drafter.eq("id", id)
-
-    res = drafter.limit(1).maybe_single().execute()
+    res = (
+        db.table("articles")
+        .select(*query)
+        .eq("status", "draft")
+        .limit(1)
+        .maybe_single()
+        .execute()
+    )
 
     try:
         results = format_data(res.data)

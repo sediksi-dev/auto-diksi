@@ -28,7 +28,6 @@ class PreProcess:
     ):
 
         url = f"https://{source}/{path}/media/{id}"
-        print(url)
         response = requests.get(url)
         response_data = response.json()
         return {
@@ -41,7 +40,6 @@ class PreProcess:
     def get_featured_image_link_full(self, id: int, endpoint: str):
 
         url = f"{endpoint}/media/{id}"
-        print(url)
         response = requests.get(url)
         response_data = response.json()
         return {
@@ -61,7 +59,7 @@ class PreProcess:
             try:
                 return [image["src"] for image in images]
             except Exception as e:
-                print(e)
+                print(str(e))
                 return []
         return []
 
@@ -75,6 +73,6 @@ class PreProcess:
             try:
                 return [iframe["src"] for iframe in iframe]
             except Exception as e:
-                print(e)
+                print(str(e))
                 return []
         return []
