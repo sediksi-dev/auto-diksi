@@ -25,6 +25,10 @@ Dalam menulis paragraf pembuka, pastikan untuk mematuhi panduan penulisan beriku
 - Tone: {tone}
 
 Pastikan juga untuk menyertakan kata kunci {keyword} dalam salah satu paragraf. Selain itu, berikan sedikit latar belakang atau konteks tentang topik artikel untuk membantu pembaca memahami apa yang akan mereka baca.
+
+[INTRO GUIDELINES]
+Berikut adalah gambaran umum dari intro yang perlu kamu buat:
+{intro_guideline}
 </SYSTEM_PROMPT>
 
 <HUMAN_PROMPT>
@@ -32,3 +36,7 @@ Pastikan juga untuk menyertakan kata kunci {keyword} dalam salah satu paragraf. 
 Berikut adalah gambaran umum dari intro yang perlu kamu buat:
 {intro_guideline}
 </HUMAN_PROMPT>
+
+
+<SYSTEM_PROMPT_CREATIVE>
+</SYSTEM_PROMPT_CREATIVE>

@@ -90,5 +90,6 @@ def seeder_default_rewriter(args: KeywordToArticleInput):
         "title": seo_data.seo_title,
         "description": seo_data.meta_description,
         "keyword": keyword,
+        "outline": outline,
         "article": full_article,
     }

@@ -70,7 +70,7 @@ Your assignment is to elaborate on a specified section in the target language "{
 <HUMAN_PROMPT_LONG>
 Now, expand the content for the "{section_title}" section of the article "{title}" in "{lang_target}" language. Write engaging paragraphs that delve into the key points provided in the information section with style: "{style}" and tone: "{tone}". This section is crucial for optimizing the keyword "{keyword}" and engaging our target audience with valuable insights on {intent}. 
 
-Focus on expanding the following key points into engaging and deep discussions that resonate with our audience:
+Start by creating a very interesting, captivating, and intriguing a level 2 heading (##). Then, elaborate on the subtopic "{section_title}" using the information provided. Ensure each paragraph is concise, informative, and engaging, with a maximum of 60 words per paragraph. Focus on expanding the following key points into engaging and deep discussions that resonate with our audience:
 {informations}
 </HUMAN_PROMPT_LONG>
 

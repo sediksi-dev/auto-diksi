@@ -6,6 +6,8 @@ from .models import (
     ArticleWriteOutput,
 )
 
+from modules.supabase.query.update_article import update_article
+
 from helpers import error_handling as err
 
 from modules.supabase.query.get_article_data_by_id import get_article_data_by_id
@@ -29,6 +31,14 @@ class BotRewriter(PreProcess):
     @property
     def db_data(self):
         return self.__data
+
+    def __being_process(self, draft_id: int):
+        try:
+            update_article(draft_id, {"status": "pending"})
+        except Exception as e:
+            raise err.DatabaseException(
+                f"Error update status to `pending` >>> {str(e)}"
+            )
 
     def __fetch_wp_data(self):
         data = self.__data.model_dump()
@@ -74,6 +84,7 @@ class BotRewriter(PreProcess):
     def rewrite(self):
         data = self.__data.model_dump()
         draft_id = data["draft_id"]
+        self.__being_process(draft_id)
         fetched = self.__fetch_wp_data()
 
         featured_media = self._featured_media_handler(

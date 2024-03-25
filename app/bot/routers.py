@@ -43,17 +43,23 @@ async def bot_crawler():
     bot = BotCrawler()
     try:
         data = bot.submit_posts()
+        if len(data) == 0:
+            return {
+                "status": "success",
+                "message": "No new articles found in the sources.",
+                "data": data,
+            }
+
         return {
             "status": "success",
             "message": f"{len(data)} articles have been saved to the database.",
             "data": data,
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "data": [],
-        }
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to crawling new post in sources. Message: {str(e)}",
+        )
 
 
 @router.post(
@@ -67,18 +73,14 @@ async def rewriting_drafted_articles(
     """
     try:
         bot = BotRewriter(draft_id)
-        data = bot.write()
+        data = bot.rewrite()
         return {
             "status": "success",
             "message": "The articles have been rewritten.",
             "data": data,
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "data": None,
-        }
+        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
 
 
 @router.post("/uploader", summary="Post the rewrited articles to the WordPress site")
@@ -88,13 +90,21 @@ async def post_to_wp(
     """
     This endpoint will post the drafted articles to the WordPress site.
     """
+
     wp = BotUploader()
-    response = wp.post(data)
-    return response
+    try:
+        response = wp.post(data)
+        return {
+            "status": "success",
+            "message": "The articles have been posted to the WordPress site.",
+            "data": response,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
 
 
 @router.post("/run", summary="Running the bot to rewrite, and post to WordPress")
-def running_bot():
+async def running_bot():
     try:
         bot = BotRewriter()
         draft_id = bot.db_data.draft_id
