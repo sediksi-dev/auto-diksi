@@ -1,7 +1,7 @@
 from typing import List
 import requests
 from modules.supabase.db import db
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 from .models import WpPostData, ArticleToTaxMapping, SubmittedArticles
 

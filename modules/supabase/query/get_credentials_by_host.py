@@ -1,11 +1,23 @@
+from modules.supabase.db import db
 from pydantic import BaseModel, Field
-from helper.error_handling import error_handler
-from .get_web_config import get_web_config
+from helpers.error_handling import error_handler
 
 
 class Credentials(BaseModel):
     user: str
     pass_: str = Field(..., alias="pass")
+
+
+def get_web_config(host: str) -> dict:
+    query = ("key:key", "value:value", "web:web_id!inner(url:url)")
+    res, _ = db.table("web_config").select(*query).eq("web.url", host).execute()
+
+    result = res[1]
+    web_config = {}
+    for item in result:
+        web_config[item["key"]] = item["value"]
+
+    return web_config
 
 
 @error_handler("db", "Error when getting credentials")

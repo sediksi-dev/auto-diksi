@@ -1,7 +1,7 @@
 # from pydantic import BaseModel
 from modules.supabase.db import db
 from modules.supabase.schema.articles import Article
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 
 @error_handler("db", "Error updating draft article")

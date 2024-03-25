@@ -36,3 +36,35 @@ class ArticleToArticleOutput(BaseModel):
         ...,
         description="The rewritten article in markdown format",
     )
+
+
+class KeywordToArticleInput(BaseModel):
+    keyword: str = Field(
+        ...,
+        title="The keyword",
+        description="The keyword to be used as seed",
+    )
+    lang_target: str = Field(
+        "indonesia",
+        title="The target language",
+        description="The language to translate the article to",
+    )
+
+
+class KeywordToArticleOutput(BaseModel):
+    title: str = Field(
+        ...,
+        description="SEO Title of the rewritten article",
+    )
+    description: str = Field(
+        ...,
+        description="Meta Description of the rewritten article",
+    )
+    keyword: str = Field(
+        ...,
+        description="Main keyword of the rewritten article",
+    )
+    article: str = Field(
+        ...,
+        description="The rewritten article in markdown format",
+    )

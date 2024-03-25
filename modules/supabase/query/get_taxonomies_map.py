@@ -1,8 +1,8 @@
 from pydantic import BaseModel
 from modules.supabase.db import db
-from app.bot.crawler.models import WpPostData
+from app.bot.crawl.models import WpPostData
 from urllib.parse import urlparse
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 
 class TaxMappingSourceData(BaseModel):
