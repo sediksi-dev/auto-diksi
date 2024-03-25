@@ -26,7 +26,20 @@ class PreProcess:
     def get_featured_image_link(
         self, id: int, source: str, path: str = "wp-json/wp/v2"
     ):
+
         url = f"https://{source}/{path}/media/{id}"
+        response = requests.get(url)
+        response_data = response.json()
+        return {
+            "url": response_data["guid"]["rendered"],
+            "title": response_data["title"]["rendered"],
+            "caption": self.clean_html(response_data["caption"]["rendered"]),
+            "alt": response_data["alt_text"],
+        }
+
+    def get_featured_image_link_full(self, id: int, endpoint: str):
+
+        url = f"{endpoint}/media/{id}"
         response = requests.get(url)
         response_data = response.json()
         return {
@@ -46,7 +59,7 @@ class PreProcess:
             try:
                 return [image["src"] for image in images]
             except Exception as e:
-                print(e)
+                print(str(e))
                 return []
         return []
 
@@ -60,6 +73,6 @@ class PreProcess:
             try:
                 return [iframe["src"] for iframe in iframe]
             except Exception as e:
-                print(e)
+                print(str(e))
                 return []
         return []

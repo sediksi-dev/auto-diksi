@@ -1,38 +1,26 @@
 import os
 from dotenv import load_dotenv
 
-from fastapi import APIRouter, HTTPException, Depends, Security, Response
-from fastapi.security import APIKeyHeader
-from .crawler.controller import BotCrawler
+from fastapi import (
+    APIRouter,
+    HTTPException,
+    Depends,
+)
 
-from .writer.controller import BotRewriter
+from helpers.auth import auth
+
+from .crawl.controller import BotCrawler
+
+from .rewrite.controller import BotRewriter
 
 from .uploader.controller import BotUploader
 
-from .models import CrawlerResponse, RewriterResponse, PostToWpArgs, PostToWpPayload
-
-from helper.error_handling import AiResponseException, DatabaseException, WpException
-
-from modules.supabase.query.get_web_config_by_id import get_web_config_by_id
+from .schemas import CrawlerResponse, RewriterResponse, UploaderPayload
 
 load_dotenv()
 
 auth_email = os.environ.get("API_KEY_EMAIL")
 auth_password = os.environ.get("API_KEY_PASSWORD")
-
-
-async def auth(
-    response: Response,
-    passkey=Security(APIKeyHeader(name="X-AGC-PASSKEY")),
-):
-    split_passkey = passkey.split(":")
-    email = split_passkey[0]
-    password = split_passkey[1]
-    if email != auth_email or password != auth_password:
-        response.headers["X-AGC-PASSKEY"] = "not allowed"
-        raise HTTPException(status_code=403, detail="Invalid API Key")
-    response.headers["X-AGC-PASSKEY"] = "allowed"
-    return True
 
 
 router = APIRouter(
@@ -55,23 +43,29 @@ async def bot_crawler():
     bot = BotCrawler()
     try:
         data = bot.submit_posts()
+        if len(data) == 0:
+            return {
+                "status": "success",
+                "message": "No new articles found in the sources.",
+                "data": data,
+            }
+
         return {
             "status": "success",
             "message": f"{len(data)} articles have been saved to the database.",
             "data": data,
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "data": [],
-        }
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to crawling new post in sources. Message: {str(e)}",
+        )
 
 
 @router.post(
     "/rewrite", response_model=RewriterResponse, summary="Rewrite the drafted posts"
 )
-async def write_drafted_post(
+async def rewriting_drafted_articles(
     draft_id: int = None,
 ):
     """
@@ -79,68 +73,62 @@ async def write_drafted_post(
     """
     try:
         bot = BotRewriter(draft_id)
-        data = bot.write()
+        data = bot.rewrite()
         return {
             "status": "success",
             "message": "The articles have been rewritten.",
             "data": data,
         }
     except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "data": None,
-        }
+        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
 
 
 @router.post("/uploader", summary="Post the rewrited articles to the WordPress site")
 async def post_to_wp(
-    data: PostToWpArgs,
+    data: UploaderPayload,
 ):
     """
     This endpoint will post the drafted articles to the WordPress site.
     """
+
     wp = BotUploader()
-    response = wp.post(data)
-    return response
+    try:
+        response = wp.post(data)
+        return {
+            "status": "success",
+            "message": "The articles have been posted to the WordPress site.",
+            "data": response,
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
 
 
 @router.post("/run", summary="Running the bot to rewrite, and post to WordPress")
 async def running_bot():
     try:
         bot = BotRewriter()
-        data = bot.write()
-        status = get_web_config_by_id(data.draft_id, "status")
+        draft_id = bot.db_data.draft_id
 
-        data_to_post = PostToWpArgs(
-            draft_id=data.draft_id,
-            body=PostToWpPayload(
-                title=data.result.title,
-                content=data.result.article,
-                excerpt=data.result.description,
-                status=status,
-            ),
-            featured_media=data.featured_media,
-        )
+        data = bot.rewrite()
 
-        wp = BotUploader()
-        response = wp.post(data_to_post)
+        try:
+            data_to_post = UploaderPayload.model_validate(
+                {
+                    "draft_id": draft_id,
+                    "body": {
+                        "title": data.result.title,
+                        "content": data.result.article,
+                        "excerpt": data.result.description,
+                    },
+                    "featured_media": data.featured_media,
+                }
+            )
+            wp = BotUploader()
+            response = wp.post(data_to_post)
+            return response
 
-        return response
-
-    except AiResponseException as e:
-        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
-
-    except DatabaseException as e:
-        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
-
-    except WpException as e:
-        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
+        except Exception as e:
+            raise ValueError("Validation gagal. {}".format(str(e)))
 
     except Exception as e:
-        raise HTTPException(status_code=403, detail=f"Failed. Message: {str(e)}")
-
-
-@router.post("/test", summary="Test the bot")
-def test_bot():
-    return {"status": "success", "message": "The bot is working."}
+        raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")

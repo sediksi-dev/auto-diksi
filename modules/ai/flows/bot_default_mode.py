@@ -15,10 +15,10 @@ from modules.ai.tasks.create_outline_from_facts import (
 from modules.ai.tasks.extract_info import extract_info
 from modules.ai.tasks.add_image_to_text import add_image_to_text
 
-from helper.outline_to_str import outline_to_str
+from helpers.outline_to_str import outline_to_str
 
 
-def default_rewriter(args: ArticleToArticleInput) -> ArticleToArticleOutput:
+def bot_default_rewriter(args: ArticleToArticleInput) -> ArticleToArticleOutput:
     """
     The flow of this mode is:
     1. Fetch original article

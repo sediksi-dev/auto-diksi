@@ -1,8 +1,8 @@
 from langchain.pydantic_v1 import BaseModel
-from helper.md_prompt import prompt_md_by_tag
+from helpers.md_prompt import prompt_md_by_tag
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 
 # Define the models for input data used by `create_intro` function

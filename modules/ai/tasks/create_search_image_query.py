@@ -1,6 +1,6 @@
 from dotenv import load_dotenv
 import re
-from helper.md_prompt import prompt_md_by_tag
+from helpers.md_prompt import prompt_md_by_tag
 
 # from langchain.pydantic_v1 import BaseModel
 
@@ -11,7 +11,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 
 from langchain_core.runnables import RunnableLambda
-from helper.error_handling import error_handler
+from helpers.error_handling import error_handler
 
 load_dotenv()
 
