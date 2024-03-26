@@ -26,7 +26,7 @@ class BotRewriter(PreProcess):
         self.__data = self.__get_data()
 
     def __get_data(self):
-        return get_article_data_by_id(self.__draft_id)
+        return get_article_data_by_id(self.__draft_id, status="draft")
 
     @property
     def db_data(self):
