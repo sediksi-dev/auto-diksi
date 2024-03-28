@@ -40,7 +40,12 @@ class PreProcess:
     def get_featured_image_link_full(self, id: int, endpoint: str):
 
         url = f"{endpoint}/media/{id}"
-        response = requests.get(url)
+        response = requests.get(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            },
+        )
         response_data = response.json()
         return {
             "url": response_data["guid"]["rendered"],

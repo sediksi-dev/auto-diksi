@@ -108,7 +108,6 @@ async def running_bot():
     try:
         bot = BotRewriter()
         draft_id = bot.db_data.draft_id
-
         data = bot.rewrite()
 
         try:

@@ -49,10 +49,13 @@ class BotRewriter(PreProcess):
             "to": data["target"][0]["config"]["language"],
         }
 
-        wp_response = requests.get(source_url)
-        # wp_response.raise_for_status()
+        wp_response = requests.get(
+            source_url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3"
+            },
+        )
         results = wp_response.json()
-
         return ArticleDataFromSource(
             language=language,
             source=source_url,
@@ -91,8 +94,8 @@ class BotRewriter(PreProcess):
             id=fetched.wp_data["featured_media"],
             endpoint=data["source"]["api_endpoint"],
         )
+        mode = data["target"][0]["config"]["rewrite_mode"]
 
-        mode = data["target"][0]["config"]["mode"]
         rewrited = self.__writing(mode, fetched)
 
         output = {

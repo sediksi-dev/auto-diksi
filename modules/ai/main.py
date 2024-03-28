@@ -15,6 +15,7 @@ class AI:
     def article_to_article(
         self, mode: str, args: ArticleToArticleInput
     ) -> ArticleToArticleOutput:
+
         if mode == "default":
             return bot_default_rewriter(args)
         else:
