@@ -1,8 +1,9 @@
 from pydantic import BaseModel
-from typing import List, Literal, Optional, Any
+from typing import List, Literal, Optional
 
 from .crawl.models import SubmittedArticles
 from .rewrite.models import ArticleWriteOutput, FeaturedMediaData
+from modules.wp.models import PostToWpResponse
 
 
 # Schema for any response that will be sent by the API
@@ -21,7 +22,7 @@ class RewriterResponse(DefaultResponse):
 
 
 class UploaderResponse(DefaultResponse):
-    data: Any
+    data: PostToWpResponse
 
 
 # Schema for the payload of the post endpoint

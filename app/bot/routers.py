@@ -1,13 +1,10 @@
-import os
-from dotenv import load_dotenv
-
 from fastapi import (
     APIRouter,
     HTTPException,
-    Depends,
+    # Depends,
 )
 
-from helpers.auth import auth
+# from helpers.auth import auth
 
 from .crawl.controller import BotCrawler
 
@@ -15,18 +12,20 @@ from .rewrite.controller import BotRewriter
 
 from .uploader.controller import BotUploader
 
-from .schemas import CrawlerResponse, RewriterResponse, UploaderPayload
+from .drafter.controllers import BotDrafter
 
-load_dotenv()
-
-auth_email = os.environ.get("API_KEY_EMAIL")
-auth_password = os.environ.get("API_KEY_PASSWORD")
+from .schemas import (
+    CrawlerResponse,
+    RewriterResponse,
+    UploaderPayload,
+    UploaderResponse,
+)
 
 
 router = APIRouter(
     prefix="/bot",
     tags=["bot"],
-    dependencies=[Depends(auth)],
+    # dependencies=[Depends(auth)],
 )
 
 
@@ -63,6 +62,36 @@ async def bot_crawler():
 
 
 @router.post(
+    "/draft",
+    description="Get the drafted posts from each source in the database",
+)
+async def get_draft_posts():
+    """
+    This endpoint will check the 'draft' posts from database.
+    """
+    bot = BotDrafter()
+    try:
+        data = bot.get_articles_by_source_id()
+        if len(data) == 0:
+            return {
+                "status": "success",
+                "message": "No draft articles found in the database.",
+                "data": data,
+            }
+
+        return {
+            "status": "success",
+            "message": f"{len(data)} draft articles found in the database.",
+            "data": data,
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Failed to get draft posts from database. Message: {str(e)}",
+        )
+
+
+@router.post(
     "/rewrite", response_model=RewriterResponse, summary="Rewrite the drafted posts"
 )
 async def rewriting_drafted_articles(
@@ -83,7 +112,11 @@ async def rewriting_drafted_articles(
         raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
 
 
-@router.post("/uploader", summary="Post the rewrited articles to the WordPress site")
+@router.post(
+    "/upload",
+    summary="Post the rewrited articles to the WordPress site",
+    response_model=UploaderResponse,
+)
 async def post_to_wp(
     data: UploaderPayload,
 ):

@@ -32,3 +32,25 @@ class WpPostData(BaseModel):
             "featured_media": self.featured_media,
             **self.taxonomies,
         }
+
+
+class WpRendered(BaseModel):
+    rendered: str
+
+
+class PostToWpResponse(BaseModel):
+    id: int
+    date: str
+    date_gmt: str
+    guid: WpRendered
+    modified: str
+    modified_gmt: str
+    slug: str
+    status: str
+    type: str
+    link: str
+    title: WpRendered
+    content: WpRendered
+    excerpt: WpRendered
+    author: int
+    featured_media: int

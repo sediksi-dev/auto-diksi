@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import List
-from modules.ai.models import KeywordToArticleInput
+from modules.ai.models import KeywordToArticleInput, KeywordToArticleOutput
 from modules.ai.tasks.create_headings_from_keyword import create_headings_from_keyword
 from modules.ai.tasks.create_seo_data import create_seo_data, CreateSEODataArgs
 from modules.ai.tasks.create_intro import create_intro, CreateIntroArgs
@@ -86,10 +86,9 @@ def seeder_default_rewriter(args: KeywordToArticleInput):
 
     full_article = intro + "\n" + "\n".join(body_text)
 
-    return {
-        "title": seo_data.seo_title,
-        "description": seo_data.meta_description,
-        "keyword": keyword,
-        "outline": outline,
-        "article": full_article,
-    }
+    return KeywordToArticleOutput(
+        title=seo_data.seo_title,
+        description=seo_data.meta_description,
+        keyword=keyword,
+        article=full_article,
+    )

@@ -12,7 +12,7 @@ from modules.supabase.query.get_credentials_by_host import (
 )
 from modules.supabase.query.update_article import update_article
 
-from .models import WpPostData, TargetData
+from .models import WpPostData, TargetData, PostToWpResponse
 from app.bot.schemas import UploaderPayload, FeaturedMediaData
 
 from helpers import error_handling as err
@@ -109,7 +109,7 @@ class WP:
             data = update_article(draft_id, data={"status": status, **kwargs})
         return data
 
-    def _post_to_wp(self, payload: UploaderPayload):
+    def _post_to_wp(self, payload: UploaderPayload) -> PostToWpResponse:
         draft_id = payload.draft_id
         data = payload.body
         featured_media = payload.featured_media
@@ -155,6 +155,6 @@ class WP:
                 post_id=result_data["id"],
             )
 
-            return result_data
+            return PostToWpResponse.model_validate(result_data)
         except Exception as e:
             raise err.WpException(f"Error posting to WordPress >>> {str(e)}")
