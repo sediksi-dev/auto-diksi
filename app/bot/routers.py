@@ -1,10 +1,10 @@
 from fastapi import (
     APIRouter,
     HTTPException,
-    # Depends,
+    Depends,
 )
 
-# from helpers.auth import auth
+from helpers.auth import auth
 
 from .crawl.controller import BotCrawler
 
@@ -25,7 +25,7 @@ from .schemas import (
 router = APIRouter(
     prefix="/bot",
     tags=["bot"],
-    # dependencies=[Depends(auth)],
+    dependencies=[Depends(auth)],
 )
 
 
