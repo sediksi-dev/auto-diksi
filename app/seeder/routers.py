@@ -15,12 +15,12 @@ router = APIRouter(
 
 
 @router.post("/crawl")
-def crawl():
+async def crawl():
     return {"crawl": "crawl"}
 
 
 @router.post("/generate", response_model=GenerateResponse)
-def generate_seeds(keyword: str, lang_target: str, mode: str = "default"):
+async def generate_seeds(keyword: str, lang_target: str, mode: str = "default"):
     seed = SeederKeyword()
     try:
         results = seed.generate(keyword, lang_target, mode)
@@ -34,5 +34,5 @@ def generate_seeds(keyword: str, lang_target: str, mode: str = "default"):
 
 
 @router.post("/find-images")
-def find_images():
+async def find_images():
     return {"find_images": "find_images"}
