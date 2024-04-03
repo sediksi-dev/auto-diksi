@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 import re
 from helpers.md_prompt import prompt_md_by_tag
 
-# from langchain.pydantic_v1 import BaseModel
+from langchain_openai import ChatOpenAI
 
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -40,8 +40,20 @@ def get_image_query(text: str) -> str:
     return query
 
 
+def OpenAI_llm():
+    openai_config = {
+        "model": "gpt-3.5-turbo-0125",
+        "temperature": 1,
+        "max_tokens": 4000,
+    }
+
+    llm = ChatOpenAI(**openai_config)
+
+    return llm
+
+
 @error_handler("ai", "Error when creating a search image query.")
-def create_search_image_query(text: str, is_summarized=False) -> str:
+def create_search_image_query(text: str, is_summarized=False, use_openai=False) -> str:
     """Create a query from article to search for an image."""
 
     if not is_summarized:
@@ -55,7 +67,10 @@ def create_search_image_query(text: str, is_summarized=False) -> str:
     )
     prompt = ChatPromptTemplate.from_template(prompt)
 
-    llm = ChatGoogleGenerativeAI(model="gemini-1.0-pro")
+    if use_openai:
+        llm = OpenAI_llm()
+    else:
+        llm = ChatGoogleGenerativeAI(model="gemini-1.0-pro")
 
     chain = prompt | llm | StrOutputParser() | RunnableLambda(get_image_query)
 

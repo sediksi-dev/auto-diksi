@@ -3,6 +3,7 @@ from typing import List, Literal, Optional
 
 from .crawl.models import SubmittedArticles
 from .rewrite.models import ArticleWriteOutput, FeaturedMediaData
+from .drafter.models import DraftedArticles
 from modules.wp.models import PostToWpResponse
 
 
@@ -15,6 +16,10 @@ class DefaultResponse(BaseModel):
 # Schema for the response of the crawl endpoint
 class CrawlerResponse(DefaultResponse):
     data: List[SubmittedArticles] = []
+
+
+class DrafterResponse(DefaultResponse):
+    data: List[DraftedArticles] = []
 
 
 class RewriterResponse(DefaultResponse):

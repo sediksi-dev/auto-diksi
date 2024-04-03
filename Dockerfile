@@ -11,4 +11,4 @@ COPY ./app /api/app
 COPY ./helpers /api/helpers
 COPY ./modules /api/modules
 
-ENTRYPOINT ["sh", "-c", "uvicorn app.main:app --proxy-headers --host 0.0.0.0 --port $PORT"]
+ENTRYPOINT ["sh", "-c", "uvicorn app.main:app --workers 4 --proxy-headers --host 0.0.0.0 --port $PORT"]

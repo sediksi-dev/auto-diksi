@@ -12,7 +12,7 @@ from modules.supabase.query.get_credentials_by_host import (
 )
 from modules.supabase.query.update_article import update_article
 
-from .models import WpPostData, TargetData, PostToWpResponse
+from .models import WpPostData, TargetData, PostToWpResponse, WpCredentials
 from app.bot.schemas import UploaderPayload, FeaturedMediaData
 
 from helpers import error_handling as err
@@ -58,7 +58,7 @@ class WP:
         post_status = data["target"][0]["config"]["post_status"]
         return post_status
 
-    def __download_img_temp(self, url: str):
+    def _download_img_temp(self, url: str) -> str:
         try:
             img_data = requests.get(url).content
             filename = "modules/wp/temp/img-{}.png".format(
@@ -73,13 +73,13 @@ class WP:
         except Exception as e:
             raise err.WpException(f"Error downloading image >>> {str(e)}")
 
-    def __remove_img_temp(self, filename: str):
+    def _remove_img_temp(self, filename: str) -> None:
         os.remove(filename)
 
     def __upload_media(self, target: TargetData, media: FeaturedMediaData):
         target_url = target.web.api_endpoint + "/media"
         credentials = target.credentials
-        filename = self.__download_img_temp(media.url)
+        filename = self._download_img_temp(media.url)
         try:
             with open(filename, "rb") as img:
                 response = requests.post(
@@ -95,7 +95,7 @@ class WP:
                         "User-Agent": "Mozilla/5.0",
                     },
                 )
-            self.__remove_img_temp(filename)
+            self._remove_img_temp(filename)
             json_data = response.json()
             return json_data["id"]
         except Exception as e:
@@ -142,19 +142,64 @@ class WP:
 
             result_data = response.json()
 
-            link = (
-                result_data.get("link", "")
-                if result_data.get("link") not in ["", None]
-                else result_data.get("guid").get("rendered")
-            )
-
-            self.__update_draft_status(
-                draft_id,
-                "published",
-                public_url=link,
-                post_id=result_data["id"],
-            )
-
             return PostToWpResponse.model_validate(result_data)
+        except Exception as e:
+            raise err.WpException(f"Error posting to WordPress >>> {str(e)}")
+
+
+class BasicWP(WP):
+    def __init__(self):
+        super().__init__()
+
+    def image_upload(
+        self, target_url: str, image_url: str, credentials: WpCredentials, **kwargs
+    ):
+        title = kwargs.get("title", "")
+        caption = kwargs.get("caption", "")
+        alt_text = kwargs.get("alt_text", "")
+        return_id = kwargs.get("return_id", True)
+        filename = self._download_img_temp(image_url)
+        try:
+            with open(filename, "rb") as img:
+                response = requests.post(
+                    target_url,
+                    auth=HTTPBasicAuth(credentials.username, credentials.token),
+                    files={"file": (filename, img)},
+                    data={
+                        "title": title,
+                        "caption": caption,
+                        "alt_text": alt_text,
+                    },
+                    headers={
+                        "User-Agent": "Mozilla/5.0",
+                    },
+                )
+            self._remove_img_temp(filename)
+            json_data = response.json()
+            if return_id:
+                return json_data["id"]
+            return json_data
+        except Exception as e:
+            print("Failed to upload image. Reason: ", str(e))
+            return None
+
+    def post_to_wp(
+        self,
+        url: str,
+        credentials: WpCredentials,
+        payload: WpPostData,
+    ) -> PostToWpResponse:
+        data = payload.model_dump_json()
+        try:
+            response = requests.post(
+                url,
+                auth=HTTPBasicAuth(credentials.username, credentials.token),
+                headers={
+                    "Content-Type": "application/json",
+                    "User-Agent": "Mozilla/5.0",
+                },
+                data=data,
+            )
+            return PostToWpResponse.model_validate(response.json())
         except Exception as e:
             raise err.WpException(f"Error posting to WordPress >>> {str(e)}")

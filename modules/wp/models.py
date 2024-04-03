@@ -1,4 +1,5 @@
 from pydantic import BaseModel, model_serializer
+from datetime import datetime
 from typing import Literal, Dict, Optional
 from modules.supabase.query.get_credentials_by_host import Credentials
 
@@ -14,12 +15,19 @@ class TargetData(BaseModel):
     credentials: Credentials
 
 
+class WpCredentials(BaseModel):
+    username: str
+    token: str
+
+
 class WpPostData(BaseModel):
     title: str
     content: str
     excerpt: str
     status: Literal["publish", "draft"] = "draft"
+    date: Optional[str] = datetime.now().isoformat()
     taxonomies: Dict[str, str] = {}
+
     featured_media: Optional[int] = None
 
     @model_serializer()
@@ -30,6 +38,7 @@ class WpPostData(BaseModel):
             "excerpt": self.excerpt,
             "status": self.status,
             "featured_media": self.featured_media,
+            "date": self.date,
             **self.taxonomies,
         }
 

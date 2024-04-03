@@ -5,6 +5,7 @@ from fastapi import (
 )
 
 from helpers.auth import auth
+from modules.supabase.query.update_article import update_article
 
 from .crawl.controller import BotCrawler
 
@@ -16,6 +17,7 @@ from .drafter.controllers import BotDrafter
 
 from .schemas import (
     CrawlerResponse,
+    DrafterResponse,
     RewriterResponse,
     UploaderPayload,
     UploaderResponse,
@@ -64,6 +66,7 @@ async def bot_crawler():
 @router.post(
     "/draft",
     description="Get the drafted posts from each source in the database",
+    response_model=DrafterResponse,
 )
 async def get_draft_posts():
     """
@@ -141,6 +144,8 @@ async def running_bot():
     try:
         bot = BotRewriter()
         draft_id = bot.db_data.draft_id
+        update_article(draft_id, data={"status": "pending"})
+
         data = bot.rewrite()
 
         try:
@@ -157,10 +162,24 @@ async def running_bot():
             )
             wp = BotUploader()
             response = wp.post(data_to_post)
+
+            update_article(
+                draft_id,
+                data={
+                    "status": "pending",
+                    "post_id": response.id,
+                    "public_url": (
+                        response.link if response.link else response.guid.rendered
+                    ),
+                },
+            )
+
             return response
 
         except Exception as e:
+            update_article(draft_id, data={"status": "error"})
             raise ValueError("Validation gagal. {}".format(str(e)))
 
     except Exception as e:
+        update_article
         raise HTTPException(status_code=400, detail=f"Failed. Message: {str(e)}")
