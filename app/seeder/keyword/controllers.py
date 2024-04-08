@@ -95,16 +95,30 @@ class SeederKeyword:
             return_id=True,
         )
 
-        utctime = datetime.datetime.strptime(seed.publish_date, "%Y-%m-%dT%H:%M:%S")
-        timezone = datetime.timezone(datetime.timedelta(hours=7))
-        localtime = utctime.astimezone(timezone)
+        publish_date = datetime.datetime.strptime(
+            seed.publish_date, "%Y-%m-%dT%H:%M:%S+00:00"
+        )
+        # change to utc +7
+        publish_date = datetime.datetime(
+            publish_date.year,
+            publish_date.month,
+            publish_date.day,
+            publish_date.hour,
+            publish_date.minute,
+            publish_date.second,
+            tzinfo=datetime.timezone.utc,
+        )
+        publish_date = publish_date.astimezone(
+            tz=datetime.timezone(datetime.timedelta(hours=7))
+        )
+        publish_date = publish_date.isoformat()
 
         post_data = WpPostData(
             title=args.article.title,
             excerpt=args.article.description,
             content=md.markdown(args.article.article),
             status=seed.publish_status,
-            date=localtime,
+            date=publish_date,
             taxonomies={seed.tax.term: str(seed.tax.tax_id)},
         )
         if image_id is not None:
