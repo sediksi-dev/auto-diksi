@@ -1,5 +1,6 @@
 import random
 import markdown as md
+import datetime
 from .models import FeaturedImage
 from app.seeder.schemas import UploadPayload
 
@@ -94,12 +95,16 @@ class SeederKeyword:
             return_id=True,
         )
 
+        utctime = datetime.datetime.strptime(seed.publish_date, "%Y-%m-%dT%H:%M:%S")
+        timezone = datetime.timezone(datetime.timedelta(hours=7))
+        localtime = utctime.astimezone(timezone)
+
         post_data = WpPostData(
             title=args.article.title,
             excerpt=args.article.description,
             content=md.markdown(args.article.article),
             status=seed.publish_status,
-            date=seed.publish_date,
+            date=localtime,
             taxonomies={seed.tax.term: str(seed.tax.tax_id)},
         )
         if image_id is not None:
