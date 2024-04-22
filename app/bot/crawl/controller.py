@@ -91,10 +91,16 @@ class BotCrawler:
         for chunk in chunked_urls:
             response = get_articles_by_urls(chunk)
             posted_articles += response
+
+        print("POSTED ARTICLES")
+        print(f"Total: {len(posted_articles)}")
+        print("Example: ", posted_articles[:5])
+        print("Example articles: ", articles[:5])
+
         filtered_articles = [
             article
             for article in articles
-            if article.link not in [x for x in posted_articles]
+            if article.link not in [x["source_url"] for x in posted_articles]
         ]
         return filtered_articles
 
