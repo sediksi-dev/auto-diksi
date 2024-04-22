@@ -58,15 +58,22 @@ class BotCrawler:
 
         return filtered
 
-    def __processing_raw_articles(self):
+    def __processing_raw_articles(self) -> List[WpPostData]:
+        """Handling raw articles from sources. This method will get all wp articles from sources
+        Returns:
+            List[WpPostData]: List of WpPostData object
+        """
         sources = self.__source
         articles: List[WpPostData] = []
         for src in sources:
             term_names = [tax.term_name for tax in src.taxonomies]
-            wp_posts = self.__get_wp_articles(src)
-            for term in term_names:
-                filtered_posts = self.__filter_posts(wp_posts, src, term)
-                articles += [WpPostData(**article) for article in filtered_posts]
+            try:
+                wp_posts = self.__get_wp_articles(src)
+                for term in term_names:
+                    filtered_posts = self.__filter_posts(wp_posts, src, term)
+                    articles += [WpPostData(**article) for article in filtered_posts]
+            except Exception as e:
+                print(f"Error when get posts from {src.url}. Message: {str(e)}")
         unique_articles: List[WpPostData] = []
         for article in articles:
             if article.link not in [x.link for x in unique_articles]:
@@ -87,7 +94,7 @@ class BotCrawler:
         filtered_articles = [
             article
             for article in articles
-            if article.link not in [x["source_url"] for x in posted_articles]
+            if article.link not in [x for x in posted_articles]
         ]
         return filtered_articles
 
