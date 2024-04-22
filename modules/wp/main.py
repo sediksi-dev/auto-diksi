@@ -130,6 +130,9 @@ class WP:
             if featured_media_id is not None:
                 body.featured_media = featured_media_id
 
+            if data.date is not None:
+                body.date = data.date
+
             response = requests.post(
                 url,
                 auth=(credentials.user, credentials.pass_),

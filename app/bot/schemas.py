@@ -35,6 +35,7 @@ class UploaderBody(BaseModel):
     title: str
     content: str
     excerpt: str
+    date: Optional[str] = None
 
 
 class UploaderPayload(BaseModel):

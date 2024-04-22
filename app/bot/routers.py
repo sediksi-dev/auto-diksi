@@ -144,6 +144,8 @@ async def running_bot():
     try:
         bot = BotRewriter()
         draft_id = bot.db_data.draft_id
+        published_date = bot.db_data.published_date.strftime("%Y-%m-%d %H:%M:%S")
+        published_date = str(published_date)
         update_article(draft_id, data={"status": "pending"})
 
         data = bot.rewrite()
@@ -156,6 +158,7 @@ async def running_bot():
                         "title": data.result.title,
                         "content": data.result.article,
                         "excerpt": data.result.description,
+                        "date": published_date,
                     },
                     "featured_media": data.featured_media,
                 }
@@ -166,7 +169,7 @@ async def running_bot():
             update_article(
                 draft_id,
                 data={
-                    "status": "pending",
+                    "status": "published",
                     "post_id": response.id,
                     "public_url": (
                         response.link if response.link else response.guid.rendered
